@@ -1,0 +1,18 @@
+{
+    "build": "false",
+    "debug": "false",
+    "gpt": "false",
+    "image": "centos7.0",
+    "interfaces": {
+        "eth0": {
+            "gw": "11.12.13.14",
+            "hwaddr": "00:1a:bc:0a:1a:35",
+            "ip": "11.12.13.14",
+            "netmask": "255.255.255.0"
+        }
+    },
+    "kexec": "false",
+    "kopts": "None",
+    "site": "abc1",
+    "version": "latest"
+}
