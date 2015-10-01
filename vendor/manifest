@@ -4,7 +4,7 @@
 		{
 			"importpath": "github.com/coreos/go-etcd/etcd",
 			"repository": "https://github.com/coreos/go-etcd",
-			"revision": "6a4f8f4df24080e4358e287f8ff4a3474b0088e5",
+			"revision": "de3514f25635bbfb024fdaf2a8d5f67378492675",
 			"branch": "master",
 			"path": "/etcd"
 		},
@@ -29,7 +29,7 @@
 		{
 			"importpath": "github.com/ugorji/go/codec",
 			"repository": "https://github.com/ugorji/go",
-			"revision": "978848809c412ecf849d309ca7d1da226e291c52",
+			"revision": "2cb41eb350bb803298e42218d78a525daca640a5",
 			"branch": "master",
 			"path": "/codec"
 		},
@@ -48,7 +48,7 @@
 		{
 			"importpath": "github.com/xeipuuv/gojsonschema",
 			"repository": "https://github.com/xeipuuv/gojsonschema",
-			"revision": "888f4e6541f4d1d50161e5880e9828865089f966",
+			"revision": "32ec3b388633cd08f2ac9970a53dc2278b1bc4c6",
 			"branch": "master"
 		}
 	]

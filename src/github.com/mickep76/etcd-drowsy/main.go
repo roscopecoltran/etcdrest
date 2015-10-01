@@ -9,43 +9,45 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 
 	etcd "github.com/coreos/go-etcd/etcd"
 	"github.com/gorilla/mux"
 	"github.com/mickep76/etcdmap"
-	"github.com/xeipuuv/gojsonschema"
+	//	"github.com/xeipuuv/gojsonschema"
 )
 
+// JSONError structure.
 type JSONError struct {
 	message string `json:"message"`
 }
 
 // Env variables.
 type Env struct {
-	EtcdConn string
-	Bind     string
-	Port     string
+	Peers string
+	Bind  string
 }
 
-// Endpoint configuration.
-type Endpoint struct {
-	Path      string `json:"path"`
-	Desc      string `json:"desc"`
-	SchemaURL string `json:"schema"`
+// Route structure.
+type Route struct {
+	Path     string `json:"path"`
+	Endpoint string `json:"endpoint"`
+	Schema   string `json:"schema"`
 }
 
 // getEnv variables.
 func getEnv() Env {
 	env := Env{}
+	env.Peers = "http://127.0.0.1:4001,http://127.0.0.1:2379"
+	env.Bind = "127.0.0.1:8080"
+
 	for _, e := range os.Environ() {
 		a := strings.Split(e, "=")
 		switch a[0] {
-		case "ETCD_CONN":
-			env.EtcdConn = a[1]
-		case "ETCD_REST_PORT":
-			env.Port = a[1]
-		case "ETCD_REST_BIND":
+		case "ETCD_PEERS":
+			env.Peers = a[1]
+		case "ETCD_BIND":
 			env.Bind = a[1]
 		}
 	}
@@ -53,6 +55,7 @@ func getEnv() Env {
 	return env
 }
 
+// errToJSON convert error to JSON.
 func errToJSON(err error) []byte {
 	e := JSONError{
 		message: err.Error(),
@@ -66,50 +69,55 @@ func errToJSON(err error) []byte {
 	return j
 }
 
-func getAllEntries(w http.ResponseWriter, r *http.Request) {
-	res, err := client.Get(*etcdDir+"/host", true, true)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusNoContent)
-		w.Write(errToJSON(err))
-		return
-	}
-	j, err := etcdmap.JSONIndent(res.Node, "    ")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(j)
-}
-
-func getEntry(w http.ResponseWriter, r *http.Request) {
-	name := mux.Vars(r)["name"]
-
-	res, err := client.Get(*etcdDir+"/host/"+name, true, true)
-	if err != nil {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-	j, err := etcdmap.JSONIndent(res.Node, "    ")
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(errToJSON(err))
-		return
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(j)
-}
-
-func updateEntry(w http.ResponseWriter, r *http.Request) {
-}
-
-func createEntry(endpoint Endpoint) func(w http.ResponseWriter, r *http.Request) {
+// getAllEntries return all entries for an endpoint.
+func getAllEntries(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s GET %s", r.RemoteAddr, r.RequestURI)
+		res, err := client.Get(route.Endpoint, true, true)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusNoContent)
+			w.Write(errToJSON(err))
+			return
+		}
+		j, err := etcdmap.JSONIndent(res.Node, "	")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+	}
+}
 
+// getEntry return a single entry for an endpoint.
+func getEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["name"]
+
+		log.Printf("%s GET %s", r.RemoteAddr, r.RequestURI)
+		res, err := client.Get(route.Endpoint+"/"+name, true, true)
+		if err != nil {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		j, err := etcdmap.JSONIndent(res.Node, "	")
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(errToJSON(err))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+	}
+}
+
+// createEntry for an endpoint.
+func createEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
@@ -121,33 +129,35 @@ func createEntry(endpoint Endpoint) func(w http.ResponseWriter, r *http.Request)
 		}
 
 		j := body
+		/*
+			docLoader := gojsonschema.NewStringLoader(string(j))
 
-		docLoader := gojsonschema.NewStringLoader(string(j))
+			schemaLoader := gojsonschema.NewReferenceLoader(route.Schema)
 
-		schemaLoader := gojsonschema.NewReferenceLoader(endpoint.SchemaURL)
+			fmt.Println(schemaLoader)
 
-		fmt.Println(schemaLoader)
-
-		result, err := gojsonschema.Validate(schemaLoader, docLoader)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		if !result.Valid() {
-			m := map[string]string{}
-			for _, e := range result.Errors() {
-				m[e.Field()] = e.Description()
+			result, err := gojsonschema.Validate(schemaLoader, docLoader)
+			if err != nil {
+				panic(err.Error())
 			}
 
-			b, _ := json.MarshalIndent(&m, "", "    ")
+			if !result.Valid() {
+				m := map[string]string{}
+				for _, e := range result.Errors() {
+					m[e.Field()] = e.Description()
+				}
 
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(b)
-			return
-		}
+				b, _ := json.MarshalIndent(&m, "", "	")
 
-		if err = etcdmap.CreateJSON(client, "/host/"+name, j); err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write(b)
+				return
+			}
+		*/
+
+		log.Printf("%s PUT %s", r.RemoteAddr, r.RequestURI)
+		if err = etcdmap.CreateJSON(client, route.Endpoint+"/"+name, j); err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(errToJSON(err))
@@ -160,91 +170,88 @@ func createEntry(endpoint Endpoint) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func deleteEntry(w http.ResponseWriter, r *http.Request) {
-	name := mux.Vars(r)["name"]
+func deleteEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["name"]
 
-	_, err := client.Delete("/host/"+name, true)
-	if err != nil {
-		panic(err)
+		log.Printf("%s PUT %s", r.RemoteAddr, r.RequestURI)
+		_, err := client.Delete(route.Endpoint+"/"+name, true)
+		if err != nil {
+			panic(err)
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusNoContent)
 	}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusNoContent)
 }
 
 var client *etcd.Client
-var etcdDir *string
-var schema []byte
-var endpoints []Endpoint
+var schemas []byte
+var routes []Route
 
 func main() {
-	// Define endpoints.
-	endpoints = []Endpoint{
-		Endpoint{
-			Path:      "/hosts",
-			Desc:      "Host",
-			SchemaURL: "http://localhost:8080/schemas/host.json",
-		},
-		Endpoint{
-			Path:      "/hosts/{host}/interfaces",
-			Desc:      "Host Interface",
-			SchemaURL: "http://localhost:8080/schemas/interface.json",
-		},
-	}
-
-	// Get app env variables.
+	// Get env variables.
 	env := getEnv()
-
-	// Set defaults
-	if env.Bind == "" {
-		env.Bind = "127.0.0.1"
-	}
-	if env.Port == "" {
-		env.Port = "8080"
-	}
 
 	// Options.
 	version := flag.Bool("version", false, "Version")
-	etcdNode := flag.String("etcd-node", "", "Etcd node")
-	etcdPort := flag.String("etcd-port", "2379", "Etcd port")
-	etcdDir = flag.String("etcd-dir", "/", "Etcd directory")
-	bindAddr := flag.String("bind-addr", env.Bind, "Bind to address")
-	port := flag.String("port", env.Port, "Port")
+	peers := flag.String("peers", env.Peers, "Comma separated list of etcd nodes")
+	bind := flag.String("bind", env.Bind, "Bind to address and port")
 	flag.Parse()
 
 	// Print version.
 	if *version {
-		fmt.Printf("etcd-drowsy %s\n", Version)
+		fmt.Printf("etcd-rest %s\n", Version)
 		os.Exit(0)
 	}
 
-	// Validate input.
-	if env.EtcdConn == "" && *etcdNode == "" {
-		log.Fatalf("You need to specify Etcd host.")
+	// Setup etcd client.
+	log.Printf("Connecting to etcd: %s", *peers)
+	client = etcd.NewClient(strings.Split(*peers, ","))
+
+	// Get routes.
+	res, err := client.Get("/routes", true, true)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 
-	// Setup Etcd client.
-	conn := env.EtcdConn
-	if *etcdNode != "" {
-		conn = fmt.Sprintf("http://%v:%v", *etcdNode, *etcdPort)
-	}
-	client = etcd.NewClient([]string{conn})
+	for _, v := range etcdmap.Map(res.Node) {
+		switch reflect.ValueOf(v).Kind() {
+		case reflect.Map:
+			m := v.(map[string]interface{})
 
+			path, ok := m["path"]
+			endpoint, ok2 := m["endpoint"]
+			schema, ok3 := m["schema"]
+			if ok && ok2 && ok3 {
+				routes = append(routes, Route{
+					Path:     path.(string),
+					Endpoint: endpoint.(string),
+					Schema:   schema.(string),
+				})
+				log.Printf("Adding endpoint: %s", path)
+			}
+		}
+	}
+
+	// Check that there are any registered endpoints
+	if len(routes) < 1 {
+		log.Fatal("No registered endpoints")
+	}
+
+	// Create new router.
 	r := mux.NewRouter()
 
-	for _, e := range endpoints {
-		r.HandleFunc(e.Path, getAllEntries).
+	for _, e := range routes {
+		r.HandleFunc(e.Path, getAllEntries(e)).
 			Methods("GET")
-		r.HandleFunc(e.Path+"/{name}", getEntry).
+		r.HandleFunc(e.Path+"/{name}", getEntry(e)).
 			Methods("GET")
 		r.HandleFunc(e.Path+"/{name}", createEntry(e)).
 			Methods("PUT")
-		r.HandleFunc(e.Path+"/{name}", deleteEntry).
+		r.HandleFunc(e.Path+"/{name}", deleteEntry(e)).
 			Methods("DELETE")
-		r.HandleFunc(e.Path+"/{name}", updateEntry).
-			Methods("PATCH")
 	}
 
-	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("static/"))))
-	http.ListenAndServe(*bindAddr+":"+*port, r)
+	http.ListenAndServe(*bind, r)
 }
