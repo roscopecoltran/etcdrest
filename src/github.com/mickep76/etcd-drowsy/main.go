@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mickep76/etcdmap"
 	//	"github.com/xeipuuv/gojsonschema"
+	"github.com/gorilla/handlers"
 )
 
 // JSONError structure.
@@ -72,7 +73,6 @@ func errToJSON(err error) []byte {
 // getAllEntries return all entries for an endpoint.
 func getAllEntries(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s GET %s", r.RemoteAddr, r.RequestURI)
 		res, err := client.Get(route.Endpoint, true, true)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -96,7 +96,6 @@ func getEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
-		log.Printf("%s GET %s", r.RemoteAddr, r.RequestURI)
 		res, err := client.Get(route.Endpoint+"/"+name, true, true)
 		if err != nil {
 			w.WriteHeader(http.StatusNoContent)
@@ -156,7 +155,6 @@ func createEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 			}
 		*/
 
-		log.Printf("%s PUT %s", r.RemoteAddr, r.RequestURI)
 		if err = etcdmap.CreateJSON(client, route.Endpoint+"/"+name, j); err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -174,7 +172,6 @@ func deleteEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
-		log.Printf("%s PUT %s", r.RemoteAddr, r.RequestURI)
 		_, err := client.Delete(route.Endpoint+"/"+name, true)
 		if err != nil {
 			panic(err)
@@ -241,6 +238,7 @@ func main() {
 
 	// Create new router.
 	r := mux.NewRouter()
+	logr := handlers.LoggingHandler(os.Stdout, r)
 
 	for _, e := range routes {
 		r.HandleFunc(e.Path, getAllEntries(e)).
@@ -253,5 +251,5 @@ func main() {
 			Methods("DELETE")
 	}
 
-	http.ListenAndServe(*bind, r)
+	http.ListenAndServe(*bind, logr)
 }
