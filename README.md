@@ -54,6 +54,12 @@ make rpm
 sudo rpm -i etcd-rest-<version>-<release>.rpm
 ```
 
+# Build Docker image
+
+```bash
+make docker-build
+```
+
 # Install using Homebrew on Mac OS X
 
 ```bash
