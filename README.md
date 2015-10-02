@@ -71,3 +71,4 @@ brew install etcd-rest
 
 ```bash
 docker run --rm -p 8080:8080 -e ETCD_PEERS=http://etcd.example.com:5001 mickep76/etcd-rest:latest
+```
