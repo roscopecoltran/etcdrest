@@ -13,10 +13,10 @@ import (
 	"strings"
 
 	etcd "github.com/coreos/go-etcd/etcd"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/mickep76/etcdmap"
-	//	"github.com/xeipuuv/gojsonschema"
-	"github.com/gorilla/handlers"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 // JSONError structure.
@@ -32,9 +32,10 @@ type Env struct {
 
 // Route structure.
 type Route struct {
-	Path     string `json:"path"`
-	Endpoint string `json:"endpoint"`
-	Schema   string `json:"schema"`
+	Path       string `json:"path"`
+	Endpoint   string `json:"endpoint"`
+	Schema     string `json:"schema"`
+	SchemaJSON string `json:"schema_json"`
 }
 
 // getEnv variables.
@@ -127,35 +128,28 @@ func createEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 
-		j := body
-		/*
-			docLoader := gojsonschema.NewStringLoader(string(j))
+		docLoader := gojsonschema.NewStringLoader(string(body))
+		schemaLoader := gojsonschema.NewStringLoader(route.SchemaJSON)
 
-			schemaLoader := gojsonschema.NewReferenceLoader(route.Schema)
+		result, err := gojsonschema.Validate(schemaLoader, docLoader)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
 
-			fmt.Println(schemaLoader)
-
-			result, err := gojsonschema.Validate(schemaLoader, docLoader)
-			if err != nil {
-				panic(err.Error())
+		if !result.Valid() {
+			var errors []string
+			for _, e := range result.Errors() {
+				errors = append(errors, fmt.Sprintf("%s: %s\n", strings.Replace(e.Context().String("/"), "(root)", route.Endpoint+"/"+name, 1), e.Description()))
 			}
+			b, _ := json.MarshalIndent(&errors, "", "	")
 
-			if !result.Valid() {
-				m := map[string]string{}
-				for _, e := range result.Errors() {
-					m[e.Field()] = e.Description()
-				}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(b)
+			return
+		}
 
-				b, _ := json.MarshalIndent(&m, "", "	")
-
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write(b)
-				return
-			}
-		*/
-
-		if err = etcdmap.CreateJSON(client, route.Endpoint+"/"+name, j); err != nil {
+		if err = etcdmap.CreateJSON(client, route.Endpoint+"/"+name, body); err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(errToJSON(err))
@@ -183,7 +177,6 @@ func deleteEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 }
 
 var client *etcd.Client
-var schemas []byte
 var routes []Route
 
 func main() {
@@ -221,10 +214,18 @@ func main() {
 			endpoint, ok2 := m["endpoint"]
 			schema, ok3 := m["schema"]
 			if ok && ok2 && ok3 {
+
+				// Get JSON Schema.
+				res, err := client.Get(schema.(string), false, false)
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+
 				routes = append(routes, Route{
-					Path:     path.(string),
-					Endpoint: endpoint.(string),
-					Schema:   schema.(string),
+					Path:       path.(string),
+					Endpoint:   endpoint.(string),
+					Schema:     schema.(string),
+					SchemaJSON: res.Node.Value,
 				})
 				log.Printf("Adding endpoint: %s", path)
 			}
