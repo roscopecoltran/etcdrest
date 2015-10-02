@@ -1,6 +1,6 @@
 # etcd-rest
 
-Create REST API in Go using etcd as a backend and using JSON schema for validation.
+Create REST API in Go using etcd as a backend with JSON schema for validation.
 
 ## Usage
 
@@ -37,6 +37,12 @@ curl -v -H "Content-Type: application/json" 127.0.0.1:8080/ntp/site1
 curl -v -H "Content-Type: application/json" -X DELETE 127.0.0.1:8080/ntp/site1
 ```
 
+# Run using Docker
+
+```bash
+docker run --rm -p 8080:8080 -e ETCD_PEERS=http://etcd.example.com:5001 mickep76/etcd-rest:latest
+```
+
 # Build
 
 ```bash
@@ -65,10 +71,4 @@ make docker-build
 ```bash
 brew tap mickep76/funk-gnarge
 brew install etcd-rest
-```
-
-# Run using Docker
-
-```bash
-docker run --rm -p 8080:8080 -e ETCD_PEERS=http://etcd.example.com:5001 mickep76/etcd-rest:latest
 ```
