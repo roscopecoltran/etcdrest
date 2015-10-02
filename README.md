@@ -37,10 +37,10 @@ curl -v -H "Content-Type: application/json" 127.0.0.1:8080/ntp/site1
 curl -v -H "Content-Type: application/json" -X DELETE 127.0.0.1:8080/ntp/site1
 ```
 
-# Run using Docker
+## Run using Docker
 
 ```bash
-docker run --rm -p 8080:8080 -e ETCD_PEERS=http://etcd.example.com:5001 mickep76/etcd-rest:latest
+docker run --rm -p 8080:8080 -e ETCD_PEERS=${ETCD_PEERS} mickep76/etcd-rest:latest
 ```
 
 # Build
