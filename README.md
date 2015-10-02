@@ -16,7 +16,7 @@ Usage of bin/etcd-rest:
 
 ## Example
 
-Start daemon.
+Start daemon, example uses: https://github.com/mickep76/etcd-export
 
 ```bash
 ./init-etcd.sh start
