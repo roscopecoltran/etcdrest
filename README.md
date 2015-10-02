@@ -36,3 +36,27 @@ curl -v -H "Content-Type: application/json" 127.0.0.1:8080/ntp
 curl -v -H "Content-Type: application/json" 127.0.0.1:8080/ntp/site1
 curl -v -H "Content-Type: application/json" -X DELETE 127.0.0.1:8080/ntp/site1
 ```
+
+# Build
+
+```bash
+git clone https://github.com/mickep76/etcd-export.git
+cd etcd-export
+./build
+bin/etcd-rest --version
+```
+
+# Build RPM
+
+```bash
+sudo yum install -y rpm-build
+make rpm
+sudo rpm -i etcd-rest-<version>-<release>.rpm
+```
+
+# Install using Homebrew on Mac OS X
+
+```bash
+brew tap mickep76/funk-gnarge
+brew install etcd-rest
+```
