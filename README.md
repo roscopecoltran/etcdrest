@@ -66,3 +66,8 @@ make docker-build
 brew tap mickep76/funk-gnarge
 brew install etcd-rest
 ```
+
+# Run using Docker
+
+```bash
+docker run --rm -p 8080:8080 -e ETCD_PEERS=http://etcd.example.com:5001 mickep76/etcd-rest:latest
