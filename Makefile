@@ -3,9 +3,9 @@ NAME:=etcd-rest
 #SITE:=$(shell git config --get remote.origin.url | sed -e 's/^.*@//' -e 's/:.*$$//')
 #PKG:=$(shell git config --get remote.origin.url | sed -e 's/^.*://' -e 's/\.git$$//')
 #USER=mickep76
-SRCDIR=src/github.com/mickep76
+SRCDIR=src/github.com/mickep76/etcd-rest
 TMPDIR1=.build
-VERSION:=$(shell awk -F '"' '/Version/ {print $$2}' ${SRCDIR}/common/version.go)
+VERSION:=$(shell awk -F '"' '/Version/ {print $$2}' ${SRCDIR}/version.go)
 RELEASE:=$(shell date -u +%Y%m%d%H%M)
 ARCH:=$(shell uname -p)
 
@@ -16,18 +16,15 @@ clean:
 
 test: clean
 	gofmt -w=true src/${SITE}/${PKG}
-	golint src/${SITE}/${PKG}
-	GOPATH=$$PWD; go vet ${SITE}/${PKG}
-	gb test
-
-build: test
-	gb build all
+#	golint src/${SITE}/${PKG}
+#	GOPATH=$$PWD; go vet ${SITE}/${PKG}
+#	gb test
 
 update:
 	gb vendor update --all
 
 build: test
-        gb build all
+	gb build all
 
 install:
 	cp bin/* /usr/local/bin
