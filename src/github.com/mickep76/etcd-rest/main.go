@@ -49,7 +49,7 @@ func getEnv() Env {
 		switch a[0] {
 		case "ETCD_PEERS":
 			env.Peers = a[1]
-		case "ETCD_BIND":
+		case "ETCD_REST_BIND":
 			env.Bind = a[1]
 		}
 	}
@@ -185,8 +185,8 @@ func main() {
 
 	// Options.
 	version := flag.Bool("version", false, "Version")
-	peers := flag.String("peers", env.Peers, "Comma separated list of etcd nodes")
-	bind := flag.String("bind", env.Bind, "Bind to address and port")
+	peers := flag.String("peers", env.Peers, "Comma separated list of etcd nodes, can be set with env. variable ETCD_PEERS")
+	bind := flag.String("bind", env.Bind, "Bind to address and port, can be set with env. variable ETCD_REST_BIND")
 	flag.Parse()
 
 	// Print version.
@@ -252,5 +252,5 @@ func main() {
 			Methods("DELETE")
 	}
 
-	http.ListenAndServe(*bind, logr)
+	log.Fatal(http.ListenAndServe(*bind, logr))
 }
