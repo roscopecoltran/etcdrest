@@ -1,7 +1,6 @@
 FROM gliderlabs/alpine
 
-COPY bin/sampleapp-docker /sampleapp-docker
-COPY src/github.com/docker/sampleapp-docker/templates /templates
+COPY bin/etcd-rest /etcd-rest
 
 EXPOSE 3000
-CMD ["/sampleapp-docker"]
+CMD ["/etcd-rest"]
