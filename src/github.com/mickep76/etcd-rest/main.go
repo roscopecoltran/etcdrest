@@ -11,8 +11,10 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
-	etcd "github.com/coreos/go-etcd/etcd"
+	"github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context"
+	etcd "github.com/coreos/etcd/client"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/mickep76/etcdmap"
@@ -74,7 +76,11 @@ func errToJSON(err error) []byte {
 // getAllEntries return all entries for an endpoint.
 func getAllEntries(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := client.Get(route.Endpoint, true, true)
+		kapi := etcd.NewKeysAPI(*client)
+		res, err := kapi.Get(context.Background(), route.Endpoint, &etcd.GetOptions{Recursive: true})
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusNoContent)
@@ -97,7 +103,11 @@ func getEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
-		res, err := client.Get(route.Endpoint+"/"+name, true, true)
+		kapi := etcd.NewKeysAPI(*client)
+		res, err := kapi.Get(context.Background(), route.Endpoint+"/"+name, &etcd.GetOptions{Recursive: true})
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		if err != nil {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -166,9 +176,9 @@ func deleteEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
-		_, err := client.Delete(route.Endpoint+"/"+name, true)
-		if err != nil {
-			panic(err)
+		kapi := etcd.NewKeysAPI(*client)
+		if _, err := kapi.Delete(context.Background(), route.Endpoint+"/"+name, &etcd.DeleteOptions{Recursive: true}); err != nil {
+			log.Fatalf(err.Error())
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -195,12 +205,22 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Setup etcd client.
+	// Connect to etcd.
 	log.Printf("Connecting to etcd: %s", *peers)
-	client = etcd.NewClient(strings.Split(*peers, ","))
+	cfg := etcd.Config{
+		Endpoints:               strings.Split(*peers, ","),
+		Transport:               etcd.DefaultTransport,
+		HeaderTimeoutPerRequest: time.Second,
+	}
+
+	client, err := etcd.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Get routes.
-	res, err := client.Get("/routes", true, true)
+	kapi := etcd.NewKeysAPI(client)
+	res, err := kapi.Get(context.Background(), "/routes", &etcd.GetOptions{Recursive: true})
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -215,8 +235,8 @@ func main() {
 			schema, ok3 := m["schema"]
 			if ok && ok2 && ok3 {
 
-				// Get JSON Schema.
-				res, err := client.Get(schema.(string), false, false)
+				kapi := etcd.NewKeysAPI(client)
+				res, err := kapi.Get(context.Background(), schema.(string), &etcd.GetOptions{})
 				if err != nil {
 					log.Fatal(err.Error())
 				}

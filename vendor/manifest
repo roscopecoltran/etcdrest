@@ -2,11 +2,39 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "github.com/coreos/go-etcd/etcd",
-			"repository": "https://github.com/coreos/go-etcd",
-			"revision": "de3514f25635bbfb024fdaf2a8d5f67378492675",
+			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/github.com/ugorji/go/codec",
+			"repository": "https://github.com/coreos/etcd",
+			"revision": "432b1bc230bdab43e3c4b706456b8c50624dd4a4",
 			"branch": "master",
-			"path": "/etcd"
+			"path": "/Godeps/_workspace/src/github.com/ugorji/go/codec"
+		},
+		{
+			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context",
+			"repository": "https://github.com/coreos/etcd",
+			"revision": "432b1bc230bdab43e3c4b706456b8c50624dd4a4",
+			"branch": "master",
+			"path": "/Godeps/_workspace/src/golang.org/x/net/context"
+		},
+		{
+			"importpath": "github.com/coreos/etcd/client",
+			"repository": "https://github.com/coreos/etcd",
+			"revision": "432b1bc230bdab43e3c4b706456b8c50624dd4a4",
+			"branch": "master",
+			"path": "/client"
+		},
+		{
+			"importpath": "github.com/coreos/etcd/pkg/pathutil",
+			"repository": "https://github.com/coreos/etcd",
+			"revision": "432b1bc230bdab43e3c4b706456b8c50624dd4a4",
+			"branch": "master",
+			"path": "/pkg/pathutil"
+		},
+		{
+			"importpath": "github.com/coreos/etcd/pkg/types",
+			"repository": "https://github.com/coreos/etcd",
+			"revision": "432b1bc230bdab43e3c4b706456b8c50624dd4a4",
+			"branch": "master",
+			"path": "/pkg/types"
 		},
 		{
 			"importpath": "github.com/gorilla/context",
@@ -23,21 +51,14 @@
 		{
 			"importpath": "github.com/gorilla/mux",
 			"repository": "https://github.com/gorilla/mux",
-			"revision": "49c024275504f0341e5a9971eb7ba7fa3dc7af40",
+			"revision": "ad4d7a5882b961e07e2626045eb995c022ac6664",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/mickep76/etcdmap",
 			"repository": "https://github.com/mickep76/etcdmap",
-			"revision": "87c4403f69d72d43abc584a638d78958ce22e3b4",
+			"revision": "228113261f623f627e9bb17b14228485a8dcd33f",
 			"branch": "master"
-		},
-		{
-			"importpath": "github.com/ugorji/go/codec",
-			"repository": "https://github.com/ugorji/go",
-			"revision": "2cb41eb350bb803298e42218d78a525daca640a5",
-			"branch": "master",
-			"path": "/codec"
 		},
 		{
 			"importpath": "github.com/xeipuuv/gojsonpointer",
