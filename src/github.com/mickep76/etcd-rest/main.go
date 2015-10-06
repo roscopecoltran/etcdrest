@@ -76,7 +76,7 @@ func errToJSON(err error) []byte {
 // getAllEntries return all entries for an endpoint.
 func getAllEntries(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		kapi := etcd.NewKeysAPI(*client)
+		kapi := etcd.NewKeysAPI(client)
 		res, err := kapi.Get(context.Background(), route.Endpoint, &etcd.GetOptions{Recursive: true})
 		if err != nil {
 			log.Fatal(err.Error())
@@ -103,7 +103,7 @@ func getEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
-		kapi := etcd.NewKeysAPI(*client)
+		kapi := etcd.NewKeysAPI(client)
 		res, err := kapi.Get(context.Background(), route.Endpoint+"/"+name, &etcd.GetOptions{Recursive: true})
 		if err != nil {
 			log.Fatal(err.Error())
@@ -159,7 +159,7 @@ func createEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err = etcdmap.CreateJSON(client, route.Endpoint+"/"+name, body); err != nil {
+		if err = etcdmap.CreateJSON(&client, route.Endpoint+"/"+name, body); err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(errToJSON(err))
@@ -176,7 +176,7 @@ func deleteEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
-		kapi := etcd.NewKeysAPI(*client)
+		kapi := etcd.NewKeysAPI(client)
 		if _, err := kapi.Delete(context.Background(), route.Endpoint+"/"+name, &etcd.DeleteOptions{Recursive: true}); err != nil {
 			log.Fatalf(err.Error())
 		}
@@ -186,7 +186,7 @@ func deleteEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var client *etcd.Client
+var client etcd.Client
 var routes []Route
 
 func main() {
@@ -213,7 +213,8 @@ func main() {
 		HeaderTimeoutPerRequest: time.Second,
 	}
 
-	client, err := etcd.New(cfg)
+	var err error
+	client, err = etcd.New(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
