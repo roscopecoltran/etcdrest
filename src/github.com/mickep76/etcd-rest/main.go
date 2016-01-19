@@ -35,7 +35,7 @@ func main() {
 				cli.DurationFlag{Name: "command-timeout, T", Value: 5 * time.Second, Usage: "Command timeout"},
 			},
 			Action: func(c *cli.Context) {
-				cfg.Load(c.GlobalString("config"))
+				cfg.Load(c)
 				server.Run(cfg)
 			},
 		},
@@ -46,8 +46,8 @@ func main() {
 				cli.StringFlag{Name: "format, f", EnvVar: "ETCDREST_FORMAT", Value: "JSON", Usage: "Data serialization format YAML, TOML or JSON"},
 			},
 			Action: func(c *cli.Context) {
-				cfg.Load(c.GlobalString("config"))
-				cfg.Print(c.String("format"))
+				cfg.Load(c)
+				cfg.Print(c)
 			},
 		},
 	}

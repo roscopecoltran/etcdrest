@@ -1,12 +1,14 @@
 package config
 
 import (
-	"log"
 	"os"
 	"os/user"
 	"time"
 
+	"github.com/codegangsta/cli"
 	"github.com/mickep76/iodatafmt"
+
+	"github.com/mickep76/etcd-rest/log"
 )
 
 // Config struct.
@@ -39,21 +41,26 @@ type Route struct {
 }
 
 func New() *Config {
-	c := &Config{
+	cfg := &Config{
 		Bind:     "0.0.0.0:8080",
 		Envelope: false,
 	}
 
-	c.Etcd = &Etcd{
+	cfg.Etcd = &Etcd{
 		Peers: "http://127.0.0.1:4001,http://127.0.0.1:2379",
 	}
 
-	c.Routes = &[]Route{}
+	cfg.Routes = &[]Route{}
 
-	return c
+	return cfg
 }
 
-func (c *Config) Load(fn string) {
+func (cfg *Config) Load(c *cli.Context) {
+	// Enable debug.
+	if c.GlobalBool("debug") {
+		log.SetDebug()
+	}
+
 	// Default path for config file.
 	u, _ := user.Current()
 	cfgs := []string{
@@ -66,11 +73,11 @@ func (c *Config) Load(fn string) {
 	}
 
 	// Check if we have an arg. for config file and that it exist's.
-	if fn != "" {
-		if _, err := os.Stat(fn); os.IsNotExist(err) {
-			log.Fatalf("Config file doesn't exist: %s", fn)
+	if c.GlobalString("config") != "" {
+		if _, err := os.Stat(c.GlobalString("config")); os.IsNotExist(err) {
+			log.Fatalf("Config file doesn't exist: %s", c.GlobalString("config"))
 		}
-		cfgs = append([]string{fn}, cfgs...)
+		cfgs = append([]string{c.GlobalString("config")}, cfgs...)
 	}
 
 	// Check if config file exists and load it.
@@ -78,7 +85,7 @@ func (c *Config) Load(fn string) {
 		if _, err := os.Stat(fn); os.IsNotExist(err) {
 			continue
 		}
-		log.Printf("Using config file: %s", fn)
+		log.Infof("Using config file: %s", fn)
 		f, err := iodatafmt.FileFormat(fn)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -87,13 +94,42 @@ func (c *Config) Load(fn string) {
 			log.Fatal(err.Error())
 		}
 	}
+
+	// Override configuration with arguments
+	if c.String("peers") != "" {
+		cfg.Etcd.Peers = c.String("peers")
+	}
+
+	if c.String("cert") != "" {
+		cfg.Etcd.Cert = c.String("cert")
+	}
+
+	if c.GlobalString("key") != "" {
+		cfg.Etcd.Key = c.GlobalString("key")
+	}
+
+	if c.GlobalString("ca") != "" {
+		cfg.Etcd.CA = c.GlobalString("ca")
+	}
+
+	if c.GlobalString("user") != "" {
+		cfg.Etcd.User = c.GlobalString("user")
+	}
+
+	if c.GlobalDuration("timeout") != 0 {
+		cfg.Etcd.Timeout = c.GlobalDuration("timeout")
+	}
+
+	if c.GlobalDuration("command-timeout") != 0 {
+		cfg.Etcd.CommandTimeout = c.GlobalDuration("command-timeout")
+	}
 }
 
-func (c *Config) Print(fmt string) {
-	f, err := iodatafmt.Format(fmt)
+func (cfg *Config) Print(c *cli.Context) {
+	f, err := iodatafmt.Format(c.String("format"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	iodatafmt.Print(c, f)
+	iodatafmt.Print(cfg, f)
 }

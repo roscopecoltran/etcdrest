@@ -80,7 +80,7 @@ func writeErrors(c *config.Config, w http.ResponseWriter, r *http.Request, e []s
 }
 
 func writeError(c *config.Config, w http.ResponseWriter, r *http.Request, e string, code int) {
-	//  writeErrors(c, w, r, []string{e}, code) {
+	writeErrors(c, w, r, []string{e}, code)
 }
 
 func all(c *config.Config, route *config.Route, kapi client.KeysAPI) func(w http.ResponseWriter, r *http.Request) {
