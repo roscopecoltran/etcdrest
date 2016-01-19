@@ -1,277 +1,213 @@
 package main
 
+// TODO
+// Get Config default MIME
+// Get MIME headers yaml/json/toml
+// GET MIME in URL .json/.yaml/.toml
+
 import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context"
-	etcd "github.com/coreos/etcd/client"
+	"github.com/coreos/etcd/client"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/mickep76/etcdmap"
-	"github.com/xeipuuv/gojsonschema"
+	//	"github.com/xeipuuv/gojsonschema"
+	"golang.org/x/net/context"
 )
 
-// JSONError structure.
-type JSONError struct {
-	message string `json:"message"`
+// Config struct.
+type Config struct {
+	Bind           string        `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
+	BaseURI        string        `json:"baseURI,omitempty" yaml:"baseURI,omitempty" toml:"baseURI,omitempty"`
+	SchemaURI      string        `json:"schemasURI,omitempty" yaml:"schemasURI,omitempty" toml:"schemasURI,omitempty"`
+	Peers          string        `json:"peers,omitempty" yaml:"peers,omitempty" toml:"peers,omitempty"`
+	Cert           string        `json:"cert,omitempty" yaml:"cert,omitempty" toml:"cert,omitempty"`
+	Key            string        `json:"key,omitempty" yaml:"key,omitempty" toml:"key,omitempty"`
+	CA             string        `json:"ca,omitempty" yaml:"ca,omitempty" toml:"peers,omitempty"`
+	User           string        `json:"user,omitempty" yaml:"user,omitempty" toml:"user,omitempty"`
+	Timeout        time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty" toml:"timeout,omitempty"`
+	CommandTimeout time.Duration `json:"commandTimeout,omitempty" yaml:"commandTimeout,omitempty" toml:"commandTimeout,omitempty"`
+	Envelope       bool          `json:"envelope,omitempty" yaml:"evelope,omitempty" toml:"envelope,omitempty"`
+	Routes         []Route       `json:"routes" yaml:"routes" toml:"routes"`
 }
 
-// Env variables.
-type Env struct {
-	Peers string
-	Bind  string
-}
-
-// Route structure.
+// Route struct.
 type Route struct {
-	Path       string `json:"path"`
-	Endpoint   string `json:"endpoint"`
-	Schema     string `json:"schema"`
-	SchemaJSON string `json:"schema_json"`
+	Regexp   string `json:"regexp"`
+	Path     string `json:"path"`
+	Endpoint string `json:"endpoint"`
+	Schema   string `json:"schema"`
 }
 
-// getEnv variables.
-func getEnv() Env {
-	env := Env{}
-	env.Peers = "http://127.0.0.1:4001,http://127.0.0.1:2379"
-	env.Bind = "127.0.0.1:8080"
-
-	for _, e := range os.Environ() {
-		a := strings.Split(e, "=")
-		switch a[0] {
-		case "ETCD_PEERS":
-			env.Peers = a[1]
-		case "ETCD_REST_BIND":
-			env.Bind = a[1]
-		}
-	}
-
-	return env
+// Envelope struct.
+type Envelope struct {
+	Code   int         `json:"code"`
+	Data   interface{} `json:"data,omitempty"`
+	Errors []string    `json:"errors,omitempty"`
 }
 
-// errToJSON convert error to JSON.
-func errToJSON(err error) []byte {
-	e := JSONError{
-		message: err.Error(),
+func write(c *Config, w http.ResponseWriter, r *http.Request, data interface{}) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+
+	envelope := c.Envelope
+	switch strings.ToLower(r.URL.Query().Get("envelope")) {
+	case "true":
+		envelope = true
+	case "false":
+		envelope = false
 	}
 
-	j, err := json.Marshal(&e)
-	if err != nil {
-		return []byte{}
+	if envelope == false {
+		b, _ := json.MarshalIndent(data, "", "  ")
+		w.Write(b)
+		return
 	}
 
-	return j
+	s := Envelope{
+		Code: http.StatusOK,
+		Data: data,
+	}
+
+	b, _ := json.MarshalIndent(&s, "", "  ")
+	w.Write(b)
 }
 
-// getAllEntries return all entries for an endpoint.
-func getAllEntries(route Route) func(w http.ResponseWriter, r *http.Request) {
+func writeErrors(c *Config, w http.ResponseWriter, r *http.Request, e []string, code int) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(code)
+
+	envelope := c.Envelope
+	switch strings.ToLower(r.URL.Query().Get("envelope")) {
+	case "true":
+		envelope = true
+	case "false":
+		envelope = false
+	}
+
+	if envelope == false {
+		b, _ := json.MarshalIndent(e, "", "  ")
+		w.Write(b)
+		return
+	}
+
+	s := Envelope{
+		Code:   code,
+		Errors: e,
+	}
+
+	b, _ := json.MarshalIndent(&s, "", "  ")
+	w.Write(b)
+}
+
+func writeError(c *Config, w http.ResponseWriter, r *http.Request, e string, code int) {
+	//  writeErrors(c, w, r, []string{e}, code) {
+}
+
+func all(c *Config, route *Route, kapi client.KeysAPI) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		kapi := etcd.NewKeysAPI(client)
-		res, err := kapi.Get(context.Background(), route.Endpoint, &etcd.GetOptions{Recursive: true})
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		if err != nil {
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusNoContent)
-			w.Write(errToJSON(err))
-			return
-		}
-		j, err := etcdmap.JSONIndent(res.Node, "	")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
-	}
-}
 
-// getEntry return a single entry for an endpoint.
-func getEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		name := mux.Vars(r)["name"]
-
-		kapi := etcd.NewKeysAPI(client)
-		res, err := kapi.Get(context.Background(), route.Endpoint+"/"+name, &etcd.GetOptions{Recursive: true})
+		// Retrieve data
+		res, err := kapi.Get(context.TODO(), route.Path, &client.GetOptions{Recursive: true})
 		if err != nil {
-			log.Fatal(err.Error())
-		}
-		if err != nil {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		j, err := etcdmap.JSONIndent(res.Node, "	")
-		if err != nil {
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(errToJSON(err))
-			return
-		}
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
-	}
-}
-
-// createEntry for an endpoint.
-func createEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		name := mux.Vars(r)["name"]
-
-		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-		if err != nil {
-			panic(err)
-		}
-		if err := r.Body.Close(); err != nil {
-			panic(err)
-		}
-
-		docLoader := gojsonschema.NewStringLoader(string(body))
-		schemaLoader := gojsonschema.NewStringLoader(route.SchemaJSON)
-
-		result, err := gojsonschema.Validate(schemaLoader, docLoader)
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
-
-		if !result.Valid() {
-			var errors []string
-			for _, e := range result.Errors() {
-				errors = append(errors, fmt.Sprintf("%s: %s\n", strings.Replace(e.Context().String("/"), "(root)", route.Endpoint+"/"+name, 1), e.Description()))
+			// Directory doesn't exist
+			if cerr, ok := err.(client.Error); ok && cerr.Code == 100 {
+				w.WriteHeader(http.StatusNotFound)
+				return
 			}
-			b, _ := json.MarshalIndent(&errors, "", "	")
 
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(b)
+			// Error retrieving data
+			writeError(c, w, r, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		if err = etcdmap.CreateJSON(&client, route.Endpoint+"/"+name, body); err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(errToJSON(err))
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusCreated)
-		w.Write(body)
+		m := etcdmap.Map(res.Node)
+		write(c, w, r, m)
 	}
 }
-
-func deleteEntry(route Route) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		name := mux.Vars(r)["name"]
-
-		kapi := etcd.NewKeysAPI(client)
-		if _, err := kapi.Delete(context.Background(), route.Endpoint+"/"+name, &etcd.DeleteOptions{Recursive: true}); err != nil {
-			log.Fatalf(err.Error())
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-var client etcd.Client
-var routes []Route
 
 func main() {
-	// Get env variables.
-	env := getEnv()
+	config := &Config{
+		Peers:    "http://127.0.0.1:4001,http://127.0.0.1:2379",
+		Bind:     "0.0.0.0:8080",
+		Envelope: false,
+	}
+
+	if os.Getenv("ETCDREST_BIND") != "" {
+		config.Bind = os.Getenv("ETCDREST_BIND")
+	}
+
+	if os.Getenv("ETCDREST_BASE_URI") != "" {
+		config.BaseURI = os.Getenv("ETCDREST_BASE_URI")
+	}
+
+	if os.Getenv("ETCDREST_PEERS") != "" {
+		config.Peers = os.Getenv("ETCDREST_PEERS")
+	}
 
 	// Options.
 	version := flag.Bool("version", false, "Version")
-	peers := flag.String("peers", env.Peers, "Comma separated list of etcd nodes, can be set with env. variable ETCD_PEERS")
-	bind := flag.String("bind", env.Bind, "Bind to address and port, can be set with env. variable ETCD_REST_BIND")
+	//	configFile := flag.String("config", "", "Comma separated list of etcd nodes, env. variable D2B_ETCD_PEERS")
+	peers := flag.String("peers", config.Peers, "Comma separated list of etcd nodes, env. variable D2B_ETCD_PEERS")
+	bind := flag.String("bind", config.Bind, "Bind to address and port, env. variable D2B_BIND_ADDR")
+	baseURI := flag.String("base-uri", config.BaseURI, "Server name to advertise, env. variable D2B_SERVER_NAME")
+	//	schemaURI := flag.String("schemas-uri", config.SchemaURI, "Schemas directory, env. variable D2B_SCHEMAS_DIR")
 	flag.Parse()
 
 	// Print version.
 	if *version {
-		fmt.Printf("etcd-rest %s\n", Version)
+		fmt.Printf("d2b-api %s\n", Version)
 		os.Exit(0)
+	}
+
+	// Get Base URI
+	if *baseURI == "" {
+		hostname, err := os.Hostname()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		port := strings.Split(*bind, ":")[1]
+		str := "http://" + hostname + ":" + port + "/v1"
+		baseURI = &str
 	}
 
 	// Connect to etcd.
 	log.Printf("Connecting to etcd: %s", *peers)
-	cfg := etcd.Config{
+	cfg := client.Config{
 		Endpoints:               strings.Split(*peers, ","),
-		Transport:               etcd.DefaultTransport,
+		Transport:               client.DefaultTransport,
 		HeaderTimeoutPerRequest: time.Second,
 	}
 
-	var err error
-	client, err = etcd.New(cfg)
+	c, err := client.New(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Get routes.
-	kapi := etcd.NewKeysAPI(client)
-	res, err := kapi.Get(context.Background(), "/routes", &etcd.GetOptions{Recursive: true})
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	for _, v := range etcdmap.Map(res.Node) {
-		switch reflect.ValueOf(v).Kind() {
-		case reflect.Map:
-			m := v.(map[string]interface{})
-
-			path, ok := m["path"]
-			endpoint, ok2 := m["endpoint"]
-			schema, ok3 := m["schema"]
-			if ok && ok2 && ok3 {
-
-				kapi := etcd.NewKeysAPI(client)
-				res, err := kapi.Get(context.Background(), schema.(string), &etcd.GetOptions{})
-				if err != nil {
-					log.Fatal(err.Error())
-				}
-
-				routes = append(routes, Route{
-					Path:       path.(string),
-					Endpoint:   endpoint.(string),
-					Schema:     schema.(string),
-					SchemaJSON: res.Node.Value,
-				})
-				log.Printf("Adding endpoint: %s", path)
-			}
-		}
-	}
-
-	// Check that there are any registered endpoints
-	if len(routes) < 1 {
-		log.Fatal("No registered endpoints")
-	}
+	kapi := client.NewKeysAPI(c)
 
 	// Create new router.
 	r := mux.NewRouter()
-	logr := handlers.LoggingHandler(os.Stdout, r)
 
-	for _, e := range routes {
-		r.HandleFunc(e.Path, getAllEntries(e)).
-			Methods("GET")
-		r.HandleFunc(e.Path+"/{name}", getEntry(e)).
-			Methods("GET")
-		r.HandleFunc(e.Path+"/{name}", createEntry(e)).
-			Methods("PUT")
-		r.HandleFunc(e.Path+"/{name}", deleteEntry(e)).
-			Methods("DELETE")
+	route := Route{
+		Regexp:   "^/hosts$",
+		Path:     "/hosts",
+		Endpoint: "/hosts",
 	}
 
+	r.HandleFunc("/hosts", all(config, &route, kapi)).
+		Methods("GET")
+
+	// Fire up the server
+	log.Printf("Bind to: %s", *bind)
+	logr := handlers.LoggingHandler(os.Stdout, r)
 	log.Fatal(http.ListenAndServe(*bind, logr))
 }
