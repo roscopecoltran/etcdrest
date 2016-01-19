@@ -1,14 +1,7 @@
-package main
-
-// TODO
-// Get Config default MIME
-// Get MIME headers yaml/json/toml
-// GET MIME in URL .json/.yaml/.toml
+package server
 
 import (
 	"encoding/json"
-	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -112,59 +105,12 @@ func all(c *config.Config, route *config.Route, kapi client.KeysAPI) func(w http
 	}
 }
 
-func main() {
-	/*
-		if os.Getenv("ETCDREST_BIND") != "" {
-			config.Bind = os.Getenv("ETCDREST_BIND")
-		}
-
-		if os.Getenv("ETCDREST_BASE_URI") != "" {
-			config.BaseURI = os.Getenv("ETCDREST_BASE_URI")
-		}
-
-		if os.Getenv("ETCDREST_PEERS") != "" {
-			config.Peers = os.Getenv("ETCDREST_PEERS")
-		}
-	*/
-
-	// Options.
-	version := flag.Bool("version", false, "Version")
-	cfgFile := flag.String("config", "", "Comma separated list of etcd nodes, env. variable D2B_ETCD_PEERS")
-	peers := flag.String("peers", "", "Comma separated list of etcd nodes, env. variable D2B_ETCD_PEERS")
-	bind := flag.String("bind", "0.0.0.0:8080", "Bind to address and port, env. variable D2B_BIND_ADDR")
-	baseURI := flag.String("base-uri", "", "Server name to advertise, env. variable D2B_SERVER_NAME")
-	//	schemaURI := flag.String("schemas-uri", config.SchemaURI, "Schemas directory, env. variable D2B_SCHEMAS_DIR")
-	flag.Parse()
-
-	// Print version.
-	if *version {
-		fmt.Printf("%s\n", Version)
-		os.Exit(0)
-	}
-
-	cfg := config.New()
-	if *cfgFile == "" {
-		cfg.Load(nil)
-	} else {
-		cfg.Load(cfgFile)
-	}
-
-	// Get Base URI
-	if cfg.BaseURI == "" && *baseURI == "" {
-		hostname, err := os.Hostname()
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		port := strings.Split(*bind, ":")[1]
-		str := "http://" + hostname + ":" + port + "/v1"
-		cfg.BaseURI = str
-	}
-
+func Run(cfg *config.Config) {
 	// -- Split in separate func. --
 	// Connect to etcd.
-	log.Printf("Connecting to etcd: %s", *peers)
+	log.Printf("Connecting to etcd: %s", cfg.Etcd.Peers)
 	etcdCfg := client.Config{
-		Endpoints:               strings.Split(*peers, ","),
+		Endpoints:               strings.Split(cfg.Etcd.Peers, ","),
 		Transport:               client.DefaultTransport,
 		HeaderTimeoutPerRequest: time.Second,
 	}
@@ -190,7 +136,7 @@ func main() {
 		Methods("GET")
 
 	// Fire up the server
-	log.Printf("Bind to: %s", *bind)
+	log.Printf("Bind to: %s", cfg.Bind)
 	logr := handlers.LoggingHandler(os.Stdout, r)
-	log.Fatal(http.ListenAndServe(*bind, logr))
+	log.Fatal(http.ListenAndServe(cfg.Bind, logr))
 }

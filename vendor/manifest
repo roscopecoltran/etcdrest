@@ -8,6 +8,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/codegangsta/cli",
+			"repository": "https://github.com/codegangsta/cli",
+			"revision": "c31a7975863e7810c92e2e288a9ab074f9a88f29",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/github.com/ugorji/go/codec",
 			"repository": "https://github.com/coreos/etcd",
 			"revision": "9ca3c8e5813e83b7f32b64c4037f569143f59445",

@@ -1,7 +1,6 @@
 package config
 
 import (
-	//	"fmt"
 	"log"
 	"os"
 	"os/user"
@@ -15,7 +14,7 @@ type Config struct {
 	Bind      string   `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
 	BaseURI   string   `json:"baseURI,omitempty" yaml:"baseURI,omitempty" toml:"baseURI,omitempty"`
 	SchemaURI string   `json:"schemaURI,omitempty" yaml:"schemaURI,omitempty" toml:"schemaURI,omitempty"`
-	Envelope  bool     `json:"envelope,omitempty" yaml:"evelope,omitempty" toml:"envelope,omitempty"`
+	Envelope  bool     `json:"envelope" yaml:"evelope" toml:"envelope"`
 	Etcd      *Etcd    `json:"etcd,omitempty" yaml:"etcd,omitempty" toml:"etcd,omitempty"`
 	Routes    *[]Route `json:"routes,omitempty" yaml:"routes,omitempty" toml:"routes,omitempty"`
 }
@@ -54,7 +53,7 @@ func New() *Config {
 	return c
 }
 
-func (c *Config) Load(cfgFile *string) {
+func (c *Config) Load(fn string) {
 	// Default path for config file.
 	u, _ := user.Current()
 	cfgs := []string{
@@ -67,11 +66,11 @@ func (c *Config) Load(cfgFile *string) {
 	}
 
 	// Check if we have an arg. for config file and that it exist's.
-	if cfgFile != nil {
-		if _, err := os.Stat(*cfgFile); os.IsNotExist(err) {
-			log.Fatalf("Config file doesn't exist: %s", *cfgFile)
+	if fn != "" {
+		if _, err := os.Stat(fn); os.IsNotExist(err) {
+			log.Fatalf("Config file doesn't exist: %s", fn)
 		}
-		cfgs = append([]string{*cfgFile}, cfgs...)
+		cfgs = append([]string{fn}, cfgs...)
 	}
 
 	// Check if config file exists and load it.
@@ -84,13 +83,6 @@ func (c *Config) Load(cfgFile *string) {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		//		data, err := iodatafmt.Load(fn, f)
-		//		if err != nil {
-		//			log.Fatal(err.Error())
-		//		}
-
-		//		fmt.Println(data)
-
 		if err := iodatafmt.LoadPtr(c, fn, f); err != nil {
 			log.Fatal(err.Error())
 		}
