@@ -1,0 +1,14 @@
+{
+  "asd": "123",
+  "bind": "0.0.0.0:8080",
+  "baseURI": "http://localhost:8080/v1",
+  "schemaURI": "http://localhost:8080/v1",
+  "envelope": false,
+  "routes": [
+    {
+      "regexp": "^/hosts$",
+      "path": "/hosts",
+      "endpoint": "/hosts"
+    }
+  ]
+}

@@ -21,31 +21,9 @@ import (
 	"github.com/mickep76/etcdmap"
 	//	"github.com/xeipuuv/gojsonschema"
 	"golang.org/x/net/context"
+
+	"github.com/mickep76/etcd-rest/config"
 )
-
-// Config struct.
-type Config struct {
-	Bind           string        `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
-	BaseURI        string        `json:"baseURI,omitempty" yaml:"baseURI,omitempty" toml:"baseURI,omitempty"`
-	SchemaURI      string        `json:"schemasURI,omitempty" yaml:"schemasURI,omitempty" toml:"schemasURI,omitempty"`
-	Peers          string        `json:"peers,omitempty" yaml:"peers,omitempty" toml:"peers,omitempty"`
-	Cert           string        `json:"cert,omitempty" yaml:"cert,omitempty" toml:"cert,omitempty"`
-	Key            string        `json:"key,omitempty" yaml:"key,omitempty" toml:"key,omitempty"`
-	CA             string        `json:"ca,omitempty" yaml:"ca,omitempty" toml:"peers,omitempty"`
-	User           string        `json:"user,omitempty" yaml:"user,omitempty" toml:"user,omitempty"`
-	Timeout        time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty" toml:"timeout,omitempty"`
-	CommandTimeout time.Duration `json:"commandTimeout,omitempty" yaml:"commandTimeout,omitempty" toml:"commandTimeout,omitempty"`
-	Envelope       bool          `json:"envelope,omitempty" yaml:"evelope,omitempty" toml:"envelope,omitempty"`
-	Routes         []Route       `json:"routes" yaml:"routes" toml:"routes"`
-}
-
-// Route struct.
-type Route struct {
-	Regexp   string `json:"regexp"`
-	Path     string `json:"path"`
-	Endpoint string `json:"endpoint"`
-	Schema   string `json:"schema"`
-}
 
 // Envelope struct.
 type Envelope struct {
@@ -54,7 +32,7 @@ type Envelope struct {
 	Errors []string    `json:"errors,omitempty"`
 }
 
-func write(c *Config, w http.ResponseWriter, r *http.Request, data interface{}) {
+func write(c *config.Config, w http.ResponseWriter, r *http.Request, data interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 
@@ -81,7 +59,7 @@ func write(c *Config, w http.ResponseWriter, r *http.Request, data interface{}) 
 	w.Write(b)
 }
 
-func writeErrors(c *Config, w http.ResponseWriter, r *http.Request, e []string, code int) {
+func writeErrors(c *config.Config, w http.ResponseWriter, r *http.Request, e []string, code int) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 
@@ -108,11 +86,11 @@ func writeErrors(c *Config, w http.ResponseWriter, r *http.Request, e []string, 
 	w.Write(b)
 }
 
-func writeError(c *Config, w http.ResponseWriter, r *http.Request, e string, code int) {
+func writeError(c *config.Config, w http.ResponseWriter, r *http.Request, e string, code int) {
 	//  writeErrors(c, w, r, []string{e}, code) {
 }
 
-func all(c *Config, route *Route, kapi client.KeysAPI) func(w http.ResponseWriter, r *http.Request) {
+func all(c *config.Config, route *config.Route, kapi client.KeysAPI) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Retrieve data
@@ -135,75 +113,80 @@ func all(c *Config, route *Route, kapi client.KeysAPI) func(w http.ResponseWrite
 }
 
 func main() {
-	config := &Config{
-		Peers:    "http://127.0.0.1:4001,http://127.0.0.1:2379",
-		Bind:     "0.0.0.0:8080",
-		Envelope: false,
-	}
+	/*
+		if os.Getenv("ETCDREST_BIND") != "" {
+			config.Bind = os.Getenv("ETCDREST_BIND")
+		}
 
-	if os.Getenv("ETCDREST_BIND") != "" {
-		config.Bind = os.Getenv("ETCDREST_BIND")
-	}
+		if os.Getenv("ETCDREST_BASE_URI") != "" {
+			config.BaseURI = os.Getenv("ETCDREST_BASE_URI")
+		}
 
-	if os.Getenv("ETCDREST_BASE_URI") != "" {
-		config.BaseURI = os.Getenv("ETCDREST_BASE_URI")
-	}
-
-	if os.Getenv("ETCDREST_PEERS") != "" {
-		config.Peers = os.Getenv("ETCDREST_PEERS")
-	}
+		if os.Getenv("ETCDREST_PEERS") != "" {
+			config.Peers = os.Getenv("ETCDREST_PEERS")
+		}
+	*/
 
 	// Options.
 	version := flag.Bool("version", false, "Version")
-	//	configFile := flag.String("config", "", "Comma separated list of etcd nodes, env. variable D2B_ETCD_PEERS")
-	peers := flag.String("peers", config.Peers, "Comma separated list of etcd nodes, env. variable D2B_ETCD_PEERS")
-	bind := flag.String("bind", config.Bind, "Bind to address and port, env. variable D2B_BIND_ADDR")
-	baseURI := flag.String("base-uri", config.BaseURI, "Server name to advertise, env. variable D2B_SERVER_NAME")
+	cfgFile := flag.String("config", "", "Comma separated list of etcd nodes, env. variable D2B_ETCD_PEERS")
+	peers := flag.String("peers", "", "Comma separated list of etcd nodes, env. variable D2B_ETCD_PEERS")
+	bind := flag.String("bind", "0.0.0.0:8080", "Bind to address and port, env. variable D2B_BIND_ADDR")
+	baseURI := flag.String("base-uri", "", "Server name to advertise, env. variable D2B_SERVER_NAME")
 	//	schemaURI := flag.String("schemas-uri", config.SchemaURI, "Schemas directory, env. variable D2B_SCHEMAS_DIR")
 	flag.Parse()
 
 	// Print version.
 	if *version {
-		fmt.Printf("d2b-api %s\n", Version)
+		fmt.Printf("%s\n", Version)
 		os.Exit(0)
 	}
 
+	cfg := config.New()
+	if *cfgFile == "" {
+		cfg.Load(nil)
+	} else {
+		cfg.Load(cfgFile)
+	}
+
 	// Get Base URI
-	if *baseURI == "" {
+	if cfg.BaseURI == "" && *baseURI == "" {
 		hostname, err := os.Hostname()
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 		port := strings.Split(*bind, ":")[1]
 		str := "http://" + hostname + ":" + port + "/v1"
-		baseURI = &str
+		cfg.BaseURI = str
 	}
 
+	// -- Split in separate func. --
 	// Connect to etcd.
 	log.Printf("Connecting to etcd: %s", *peers)
-	cfg := client.Config{
+	etcdCfg := client.Config{
 		Endpoints:               strings.Split(*peers, ","),
 		Transport:               client.DefaultTransport,
 		HeaderTimeoutPerRequest: time.Second,
 	}
 
-	c, err := client.New(cfg)
+	c, err := client.New(etcdCfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	kapi := client.NewKeysAPI(c)
+	// -- Split in separate func. --
 
 	// Create new router.
 	r := mux.NewRouter()
 
-	route := Route{
+	route := config.Route{
 		Regexp:   "^/hosts$",
 		Path:     "/hosts",
 		Endpoint: "/hosts",
 	}
 
-	r.HandleFunc("/hosts", all(config, &route, kapi)).
+	r.HandleFunc("/hosts", all(cfg, &route, kapi)).
 		Methods("GET")
 
 	// Fire up the server
