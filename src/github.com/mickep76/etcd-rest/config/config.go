@@ -96,12 +96,12 @@ func (cfg *Config) Load(c *cli.Context) {
 	}
 
 	// Override configuration with arguments
-	if c.String("peers") != "" {
-		cfg.Etcd.Peers = c.String("peers")
+	if c.GlobalString("peers") != "" {
+		cfg.Etcd.Peers = c.GlobalString("peers")
 	}
 
-	if c.String("cert") != "" {
-		cfg.Etcd.Cert = c.String("cert")
+	if c.GlobalString("cert") != "" {
+		cfg.Etcd.Cert = c.GlobalString("cert")
 	}
 
 	if c.GlobalString("key") != "" {
