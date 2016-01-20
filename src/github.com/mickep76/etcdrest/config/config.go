@@ -8,7 +8,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/mickep76/iodatafmt"
 
-	"github.com/mickep76/etcd-rest/log"
+	"github.com/mickep76/etcdrest/log"
 )
 
 // Config struct.

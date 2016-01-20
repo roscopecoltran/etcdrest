@@ -13,9 +13,9 @@ import (
 	//	"github.com/xeipuuv/gojsonschema"
 	"golang.org/x/net/context"
 
-	"github.com/mickep76/etcd-rest/config"
-	"github.com/mickep76/etcd-rest/etcd"
-	"github.com/mickep76/etcd-rest/log"
+	"github.com/mickep76/etcdrest/config"
+	"github.com/mickep76/etcdrest/etcd"
+	"github.com/mickep76/etcdrest/log"
 )
 
 func Get(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w http.ResponseWriter, r *http.Request) {

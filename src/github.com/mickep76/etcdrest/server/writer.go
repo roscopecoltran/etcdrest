@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mickep76/etcd-rest/config"
+	"github.com/mickep76/etcdrest/config"
 )
 
 // Envelope struct.

@@ -11,8 +11,8 @@ import (
 	"github.com/coreos/etcd/pkg/transport"
 	"golang.org/x/net/context"
 
-	"github.com/mickep76/etcd-rest/config"
-	"github.com/mickep76/etcd-rest/log"
+	"github.com/mickep76/etcdrest/config"
+	"github.com/mickep76/etcdrest/log"
 )
 
 func contextWithCommandTimeout(c *cli.Context) (context.Context, context.CancelFunc) {

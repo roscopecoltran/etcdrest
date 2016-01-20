@@ -6,8 +6,8 @@ import (
 
 	"github.com/codegangsta/cli"
 
-	"github.com/mickep76/etcd-rest/config"
-	"github.com/mickep76/etcd-rest/server"
+	"github.com/mickep76/etcdrest/config"
+	"github.com/mickep76/etcdrest/server"
 )
 
 func main() {
