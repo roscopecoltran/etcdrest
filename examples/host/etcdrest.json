@@ -1,10 +1,9 @@
 {
   "routes": [
     {
-      "regexp": "^/hosts$",
       "path": "/hosts",
       "endpoint": "/hosts",
-      "schema": "host.json"
+      "schema": "file://schemas/host.json"
     }
   ]
 }

@@ -14,12 +14,12 @@ import (
 
 // Config struct.
 type Config struct {
-	Bind      string   `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
-	BaseURI   string   `json:"baseURI,omitempty" yaml:"baseURI,omitempty" toml:"baseURI,omitempty"`
-	SchemaURI string   `json:"schemaURI,omitempty" yaml:"schemaURI,omitempty" toml:"schemaURI,omitempty"`
-	Envelope  bool     `json:"envelope" yaml:"evelope" toml:"envelope"`
-	Etcd      *Etcd    `json:"etcd,omitempty" yaml:"etcd,omitempty" toml:"etcd,omitempty"`
-	Routes    *[]Route `json:"routes,omitempty" yaml:"routes,omitempty" toml:"routes,omitempty"`
+	Bind       string   `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
+	BaseURI    string   `json:"baseURI,omitempty" yaml:"baseURI,omitempty" toml:"baseURI,omitempty"`
+	APIVersion string   `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty" toml:"apiVersion,omitempty"`
+	Envelope   bool     `json:"envelope" yaml:"evelope" toml:"envelope"`
+	Etcd       *Etcd    `json:"etcd,omitempty" yaml:"etcd,omitempty" toml:"etcd,omitempty"`
+	Routes     *[]Route `json:"routes,omitempty" yaml:"routes,omitempty" toml:"routes,omitempty"`
 }
 
 // Etcd struct.
@@ -35,7 +35,6 @@ type Etcd struct {
 
 // Route struct.
 type Route struct {
-	Regexp   string `json:"regexp"`
 	Path     string `json:"path"`
 	Endpoint string `json:"endpoint"`
 	Schema   string `json:"schema"`
@@ -43,8 +42,9 @@ type Route struct {
 
 func New() *Config {
 	cfg := &Config{
-		Bind:     "0.0.0.0:8080",
-		Envelope: false,
+		Bind:       "0.0.0.0:8080",
+		APIVersion: "v1",
+		Envelope:   false,
 	}
 
 	cfg.Etcd = &Etcd{

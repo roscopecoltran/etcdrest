@@ -1,16 +1,18 @@
 package server
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/coreos/etcd/client"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/mickep76/etcdmap"
-	//	"github.com/xeipuuv/gojsonschema"
+	"github.com/xeipuuv/gojsonschema"
 	"golang.org/x/net/context"
 
 	"github.com/mickep76/etcdrest/config"
@@ -26,7 +28,6 @@ func Get(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w ht
 			path = path + "/" + name
 		}
 
-		log.Infof("Get path: %s from etcd", path)
 		res, err := kapi.Get(context.TODO(), path, &client.GetOptions{Recursive: true})
 		if err != nil {
 			// Path doesn't exist
@@ -58,29 +59,24 @@ func Create(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w
 			panic(err)
 		}
 
-		/*
-			docLoader := gojsonschema.NewStringLoader(string(body))
-			schemaLoader := gojsonschema.NewStringLoader(route.SchemaJSON)
+		docLoader := gojsonschema.NewStringLoader(string(body))
+		schemaLoader := gojsonschema.NewReferenceLoader(route.Schema)
 
-			result, err := gojsonschema.Validate(schemaLoader, docLoader)
-			if err != nil {
-				log.Fatalf(err.Error())
+		result, err := gojsonschema.Validate(schemaLoader, docLoader)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+
+		if !result.Valid() {
+			var errors []string
+			for _, e := range result.Errors() {
+				errors = append(errors, fmt.Sprintf("%s: %s\n", strings.Replace(e.Context().String("/"), "(root)", route.Endpoint+"/"+name, 1), e.Description()))
 			}
 
-			if !result.Valid() {
-				var errors []string
-				for _, e := range result.Errors() {
-					errors = append(errors, fmt.Sprintf("%s: %s\n", strings.Replace(e.Context().String("/"), "(root)", route.Endpoint+"/"+name, 1), e.Description()))
-				}
-				b, _ := json.MarshalIndent(&errors, "", "	")
+			writeErrors(cfg, w, r, errors, http.StatusBadRequest)
+			return
+		}
 
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write(b)
-				return
-			}
-		*/
-		log.Infof("Create path: %s in etcd", path)
 		if err = etcdmap.CreateJSON(kapi, path, body); err != nil {
 			writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 			return
@@ -97,7 +93,6 @@ func Delete(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w
 		name := mux.Vars(r)["name"]
 		path := route.Path + "/" + name
 
-		log.Infof("Delete path: %s from etcd", path)
 		if _, err := kapi.Delete(context.Background(), path, &client.DeleteOptions{Recursive: true}); err != nil {
 			// Path doesn't exist
 			if cerr, ok := err.(client.Error); ok && cerr.Code == 100 {
@@ -124,14 +119,14 @@ func Run(cfg *config.Config) {
 	r := mux.NewRouter()
 
 	for _, route := range *cfg.Routes {
-		log.Infof("Add endpoint: %s path in etcd: %s", route.Endpoint, route.Path)
-		r.HandleFunc("/hosts", Get(cfg, &route, kapi)).
+		log.Infof("Add endpoint: /%s%s etcd path: %s", cfg.APIVersion, route.Endpoint, route.Path)
+		r.HandleFunc("/"+cfg.APIVersion+route.Endpoint, Get(cfg, &route, kapi)).
 			Methods("GET")
-		r.HandleFunc("/hosts/{name}", Create(cfg, &route, kapi)).
+		r.HandleFunc("/"+cfg.APIVersion+route.Endpoint+"/{name}", Create(cfg, &route, kapi)).
 			Methods("PUT")
-		r.HandleFunc("/hosts/{name}", Get(cfg, &route, kapi)).
+		r.HandleFunc("/"+cfg.APIVersion+route.Endpoint+"/{name}", Get(cfg, &route, kapi)).
 			Methods("GET")
-		r.HandleFunc("/hosts/{name}", Delete(cfg, &route, kapi)).
+		r.HandleFunc("/"+cfg.APIVersion+route.Endpoint+"/{name}", Delete(cfg, &route, kapi)).
 			Methods("DELETE")
 	}
 
