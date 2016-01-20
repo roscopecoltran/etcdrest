@@ -70,7 +70,7 @@ func Create(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w
 		if !result.Valid() {
 			var errors []string
 			for _, e := range result.Errors() {
-				errors = append(errors, fmt.Sprintf("%s: %s\n", strings.Replace(e.Context().String("/"), "(root)", route.Endpoint+"/"+name, 1), e.Description()))
+				errors = append(errors, fmt.Sprintf("%s: %s", strings.Replace(e.Context().String("/"), "(root)", route.Endpoint+"/"+name, 1), e.Description()))
 			}
 
 			writeErrors(cfg, w, r, errors, http.StatusBadRequest)
