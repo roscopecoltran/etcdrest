@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 	"os/user"
 	"time"
@@ -80,19 +81,32 @@ func (cfg *Config) Load(c *cli.Context) {
 		cfgs = append([]string{c.GlobalString("config")}, cfgs...)
 	}
 
-	// Check if config file exists and load it.
-	for _, fn := range cfgs {
-		if _, err := os.Stat(fn); os.IsNotExist(err) {
-			continue
-		}
-		log.Infof("Using config file: %s", fn)
-		f, err := iodatafmt.FileFormat(fn)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		if err := iodatafmt.LoadPtr(c, fn, f); err != nil {
-			log.Fatal(err.Error())
-		}
+	/*
+		// Check if config file exists and load it.
+		for _, fn := range cfgs {
+			if _, err := os.Stat(fn); os.IsNotExist(err) {
+				continue
+			}
+			log.Infof("Using config file: %s", fn)
+			f, err := iodatafmt.FileFormat(fn)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			if err := iodatafmt.LoadPtr(c, fn, f); err != nil {
+				log.Fatal(err.Error())
+			}
+	*/
+
+	f, err := os.Open(c.GlobalString("config"))
+	//	b, err := ioutil.ReadFile(c.GlobalString("config"))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// Decode JSON into struct
+	err2 := json.NewDecoder(f).Decode(cfg)
+	if err2 != nil {
+		log.Fatal(err2.Error())
 	}
 
 	// Override configuration with arguments

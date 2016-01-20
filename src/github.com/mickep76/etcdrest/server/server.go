@@ -123,20 +123,17 @@ func Run(cfg *config.Config) {
 	// Create new router.
 	r := mux.NewRouter()
 
-	route := config.Route{
-		Regexp:   "^/hosts$",
-		Path:     "/hosts",
-		Endpoint: "/hosts",
+	for _, route := range *cfg.Routes {
+		log.Infof("Add endpoint: %s path in etcd: %s", route.Endpoint, route.Path)
+		r.HandleFunc("/hosts", Get(cfg, &route, kapi)).
+			Methods("GET")
+		r.HandleFunc("/hosts/{name}", Create(cfg, &route, kapi)).
+			Methods("PUT")
+		r.HandleFunc("/hosts/{name}", Get(cfg, &route, kapi)).
+			Methods("GET")
+		r.HandleFunc("/hosts/{name}", Delete(cfg, &route, kapi)).
+			Methods("DELETE")
 	}
-
-	r.HandleFunc("/hosts", Get(cfg, &route, kapi)).
-		Methods("GET")
-	r.HandleFunc("/hosts/{name}", Create(cfg, &route, kapi)).
-		Methods("PUT")
-	r.HandleFunc("/hosts/{name}", Get(cfg, &route, kapi)).
-		Methods("GET")
-	r.HandleFunc("/hosts/{name}", Delete(cfg, &route, kapi)).
-		Methods("DELETE")
 
 	// Fire up the server
 	log.Infof("Bind to: %s", cfg.Bind)

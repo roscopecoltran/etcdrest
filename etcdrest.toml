@@ -1,8 +1,0 @@
-baseURI = "http://localhost:8080/v1"
-envelope = true
-schemaURI = "http://localhost:8080/v1"
-
-[[routes]]
-  regexp = "^/hosts$"
-  path = "/hosts"
-  endpoint = "/hosts"
