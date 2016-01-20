@@ -3,7 +3,7 @@
     {
       "path": "/hosts",
       "endpoint": "/hosts",
-      "schema": "file://schemas/all_hosts.json"
+      "schema": "file://schemas/hosts.json"
     }
   ]
 }

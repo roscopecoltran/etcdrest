@@ -1,5 +1,5 @@
 {
-  "test1.trading.imc.intra": {
+  "test1.example.com": {
     "site": "emea-nl-1",
     "tenant": "ops",
     "interfaces": {
