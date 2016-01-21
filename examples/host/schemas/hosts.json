@@ -2,46 +2,26 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Hosts Schema",
   "type": "object",
-  "oneOf": [
-    {
-      "$ref": "#/definitions/hosts"
-    },
-    {
-      "$ref": "#/definitions/host"
-    }
+  "additionalProperties": false,
+  "required": [
+    "site"
   ],
-  "definitions": {
-    "hosts": {
-      "additionalProperties": false,
+  "properties": {
+    "interfaces": {
+      "type": "object",
       "patternProperties": {
         ".+": {
-          "$ref": "#/definitions/host"
+          "$ref": "interface.json#"
         }
       }
     },
-    "host": {
-      "additionalProperties": false,
-      "required": [
-        "site"
-      ],
-      "properties": {
-        "interfaces": {
-          "type": "object",
-          "patternProperties": {
-            ".+": {
-              "$ref": "interface.json#"
-            }
-          }
-        },
-        "site": {
-          "type": "string",
-          "pattern": "^[a-z][a-z0-9-_]+$"
-        },
-        "tenant": {
-          "type": "string",
-          "pattern": "^[a-z][a-z0-9-_]+$"
-        }
-      }
+    "site": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-_]+$"
+    },
+    "tenant": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-_]+$"
     }
   }
 }

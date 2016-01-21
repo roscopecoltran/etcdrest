@@ -25,11 +25,8 @@ import (
 
 func CreateUpdateOrPatch(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		path := route.Path
 		name := mux.Vars(r)["name"]
-		if name != "" {
-			path = path + "/" + name
-		}
+		path := route.Path + "/" + name
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 		if err != nil {
@@ -102,10 +99,6 @@ func CreateUpdateOrPatch(cfg *config.Config, route *config.Route, kapi client.Ke
 		}
 
 		write(cfg, w, r, d)
-
-		//		w.Header().Set("Content-Type", "application/json")
-		//		w.WriteHeader(http.StatusOK)
-		//		w.Write(body)
 	}
 }
 
@@ -168,8 +161,6 @@ func Run(cfg *config.Config) {
 	for _, route := range *cfg.Routes {
 		path := "/" + cfg.APIVersion + route.Endpoint
 		log.Infof("Add endpoint: %s etcd path: %s", path, route.Path)
-		r.HandleFunc(path, CreateUpdateOrPatch(cfg, &route, kapi)).
-			Methods("POST")
 		r.HandleFunc(path, GetOneOrAll(cfg, &route, kapi)).
 			Methods("GET")
 		r.HandleFunc(path+"/{name}", GetOneOrAll(cfg, &route, kapi)).

@@ -21,10 +21,10 @@ fatal() {
 which curl &>/dev/null || fatal "Missing binary: curl"
 
 cpt "Create host 1"
-curl -s -i -H "Content-Type: application/json" -X POST -d "$(cat test1.example.com.json)" "${URL}/${APIVERS}/hosts"
+curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test1.example.com.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
 
 cpt "Create host 2"
-curl -s -i -H "Content-Type: application/json" -X POST -d "$(cat test2.example.com.json)" "${URL}/${APIVERS}/hosts"
+curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test2.example.com.json)" "${URL}/${APIVERS}/hosts/test2.example.com"
 
 cpt "Get hosts"
 curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
