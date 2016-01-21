@@ -1,1 +1,7 @@
-[ { "op": "replace", "path": "/site", "value": "apac-nl-1" } ]
+[
+  {
+    "op": "replace",
+    "path": "/site",
+    "value": "apac-nl-1"
+  }
+]

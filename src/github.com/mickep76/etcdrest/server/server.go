@@ -1,11 +1,13 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/coreos/etcd/client"
@@ -31,10 +33,10 @@ func CreateUpdateOrPatch(cfg *config.Config, route *config.Route, kapi client.Ke
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 		if err != nil {
-			panic(err)
+			writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 		}
 		if err := r.Body.Close(); err != nil {
-			panic(err)
+			writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 		}
 
 		// Patch existing document using JSON Patch RFC 6902
@@ -56,18 +58,18 @@ func CreateUpdateOrPatch(cfg *config.Config, route *config.Route, kapi client.Ke
 
 			data, err := etcdmap.JSON(res.Node)
 			if err != nil {
-				panic(err)
+				writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 			}
 
 			p, err := jsonpatch.DecodePatch(patch)
 			if err != nil {
-				panic(err)
+				writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 			}
 
 			var err2 error
 			body, err2 = p.ApplyIndent(data, "  ")
 			if err2 != nil {
-				panic(err2)
+				writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 			}
 		}
 
@@ -76,7 +78,7 @@ func CreateUpdateOrPatch(cfg *config.Config, route *config.Route, kapi client.Ke
 
 		result, err := gojsonschema.Validate(schemaLoader, docLoader)
 		if err != nil {
-			log.Fatalf(err.Error())
+			writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 		}
 
 		if !result.Valid() {
@@ -89,14 +91,21 @@ func CreateUpdateOrPatch(cfg *config.Config, route *config.Route, kapi client.Ke
 			return
 		}
 
-		if err = etcdmap.CreateJSON(kapi, path, body); err != nil {
+		var d interface{}
+		if err := json.Unmarshal(body, &d); err != nil {
+			writeError(cfg, w, r, err.Error(), http.StatusBadRequest)
+		}
+
+		if err = etcdmap.Create(kapi, path, reflect.ValueOf(d)); err != nil {
 			writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(body)
+		write(cfg, w, r, d)
+
+		//		w.Header().Set("Content-Type", "application/json")
+		//		w.WriteHeader(http.StatusOK)
+		//		w.Write(body)
 	}
 }
 
