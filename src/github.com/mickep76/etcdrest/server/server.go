@@ -65,7 +65,7 @@ func CreateUpdateOrPatch(cfg *config.Config, route *config.Route, kapi client.Ke
 			}
 
 			var err2 error
-			body, err2 = p.Apply(data)
+			body, err2 = p.ApplyIndent(data, "  ")
 			if err2 != nil {
 				panic(err2)
 			}
