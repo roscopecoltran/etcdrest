@@ -62,3 +62,50 @@ func newClient(cfg *config.Config) client.Client {
 func NewKeyAPI(cfg *config.Config) client.KeysAPI {
 	return client.NewKeysAPI(newClient(cfg))
 }
+
+// Delete document.
+func (etcd *Etcd) Delete(path string) (int, error) {
+	if _, err := etcd.keyAPI.Delete(context.TODO(), path, &client.DeleteOptions{Recursive: true}); err != nil {
+		// Pocument doesn't exist.
+		if cerr, ok := err.(client.Error); ok && cerr.Code == 100 {
+			return http.StatusNotFound, err.Error
+		}
+		
+		// Error deleting document.
+		return http.StatusInternalServerError, err
+	}
+
+	// Return success.
+	return http.StatusOK, nil
+}
+
+// Get document.
+func (etcd *Etcd) Get(path string) ([]byte, int, error) {
+	res, err := srv.keyAPI.Get(context.TODO(), path, &client.GetOptions{Recursive: true})
+	if err != nil {
+		// Document doesn't exist.
+		if cerr, ok := err.(client.Error); ok && cerr.Code == 100 {
+			return http.StatusNotFound, err.Error
+		}
+		
+		// Error retrieving document.
+		return http.StatusInternalServerError, err
+	}
+
+	return etcdmap.Map(res.Node), nil
+}
+
+// Create document.
+func (etcd *Etcd) Create(path string, doc []byte) (interface{}, int, error) {
+	var d interface{}
+	if err := json.Unmarshal(doc, &d); err != nil {
+		return nil, http.StatusBadRequest, err
+	}
+		
+	if err = etcdmap.Create(etcd.keyAPI, path, reflect.ValueOf(d)); err != nil {
+		return nil, http.StatusInternalServerError, err
+		return
+	}
+
+	return d, http.StatusOK, nil
+}
