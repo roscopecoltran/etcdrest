@@ -135,7 +135,7 @@ func Patch(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w 
 		name := mux.Vars(r)["name"]
 		path := route.Path + "/" + name
 
-		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+		patch, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 		if err != nil {
 			panic(err)
 		}
@@ -156,12 +156,17 @@ func Patch(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w 
 			return
 		}
 
-		existData, err := etcdmap.JSON(res.Node)
+		data, err := etcdmap.JSON(res.Node)
 		if err != nil {
 			panic(err)
 		}
 
-		newData, err := jsonpatch.MergePatch(existData, body)
+		p, err := jsonpatch.DecodePatch(patch)
+		if err != nil {
+			panic(err)
+		}
+
+		newData, err := p.Apply(data)
 		if err != nil {
 			panic(err)
 		}
@@ -184,14 +189,14 @@ func Patch(cfg *config.Config, route *config.Route, kapi client.KeysAPI) func(w 
 			return
 		}
 
-		if err = etcdmap.CreateJSON(kapi, path, body); err != nil {
+		if err = etcdmap.CreateJSON(kapi, path, newData); err != nil {
 			writeError(cfg, w, r, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(body)
+		w.Write(newData)
 	}
 }
 
@@ -236,7 +241,7 @@ func Run(cfg *config.Config) {
 			Methods("GET")
 		r.HandleFunc(path+"/{name}", Update(cfg, &route, kapi)).
 			Methods("PUT")
-		r.HandleFunc(path+"/{name}", Update(cfg, &route, kapi)).
+		r.HandleFunc(path+"/{name}", Patch(cfg, &route, kapi)).
 			Methods("PATCH")
 		r.HandleFunc(path+"/{name}", Delete(cfg, &route, kapi)).
 			Methods("DELETE")
