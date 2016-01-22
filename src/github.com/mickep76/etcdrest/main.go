@@ -10,6 +10,7 @@ import (
 
 	"github.com/mickep76/etcdrest/etcd"
 	"github.com/mickep76/etcdrest/log"
+	"github.com/mickep76/etcdrest/server"
 )
 
 func main() {
@@ -80,6 +81,15 @@ func server(c *cli.Context) {
 		log.Fatal(err.Error())
 	}
 	fmt.Println(doc)
+
+	// Create server config.
+	sc := server.New()
+	sc.Bind(c.GlobalString("bind"))
+	sc.APIVersion(c.GlobalString("api-version"))
+	sc.Envelope(c.GlobalString("envelope"))
+	sc.Indent(c.GlobalString("indent"))
+
+	//	sc.Run()
 }
 
 func printConfig(c *cli.Context) {

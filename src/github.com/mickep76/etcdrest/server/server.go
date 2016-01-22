@@ -1,39 +1,75 @@
 package server
 
 import (
-	"encoding/json"
+	//	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"reflect"
+	//	"reflect"
 	"strings"
 
-	"github.com/coreos/etcd/client"
 	"github.com/evanphx/json-patch"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/mickep76/etcdmap"
 	"github.com/xeipuuv/gojsonschema"
-	"golang.org/x/net/context"
 
-	"github.com/mickep76/etcdrest/config"
+	//	"github.com/mickep76/etcdrest/config"
 	"github.com/mickep76/etcdrest/etcd"
 	"github.com/mickep76/etcdrest/log"
 )
 
-// Server struct.
-type Server struct {
-	Bind       string
-	APIVersion string
-	Envelope   bool
-
-	router *mux.Router
-	etcd   *etcd.Etcd
+// Config interface.
+type Config interface {
+	Bind(string) Config
+	APIVersion(string) Config
+	Envelope(bool) Config
+	Indent(bool) Config
+	Run() error
 }
 
-func patchDoc(origDoc, patchDoc []byte) ([]byte, int, error) {
+// config struct.
+type config struct {
+	bind       string
+	apiVersion string
+	envelope   bool
+	indent     bool
+	router     *mux.Router
+}
+
+// New config constructor.
+func New() Config {
+	return &config{
+		bind:       "0.0.0.0:8080",
+		apiVersion: "v1",
+		envelope:   false,
+		indent:     true,
+		router:     mux.NewRouter(),
+	}
+}
+
+func (c *config) Bind(bind string) Config {
+	c.bind = bind
+	return c
+}
+
+func (c *config) APIVersion(apiVersion string) Config {
+	c.apiVersion = apiVersion
+	return c
+}
+
+func (c *config) Envelope(envelope bool) Config {
+	c.envelope = envelope
+	return c
+}
+
+func (c *config) Indent(indent bool) Config {
+	c.indent = indent
+	return c
+}
+
+func (c *config) patchDoc(origDoc, patchDoc []byte) ([]byte, int, error) {
 	// Prepare JSON patch.
 	patch, err := jsonpatch.DecodePatch(patchDoc)
 	if err != nil {
@@ -49,7 +85,7 @@ func patchDoc(origDoc, patchDoc []byte) ([]byte, int, error) {
 	return doc, http.StatusOK, nil
 }
 
-func validateDoc(doc []byte, schema string) (int, []error) {
+func (c *config) validateDoc(doc []byte, schema string) (int, []error) {
 	// Prepare document and JSON schema.
 	docLoader := gojsonschema.NewStringLoader(string(doc))
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
@@ -73,7 +109,7 @@ func validateDoc(doc []byte, schema string) (int, []error) {
 }
 
 // putOrPatchDoc put or patch document.
-func putOrPatchDoc(srv *Server, path string, schema string) func(w http.ResponseWriter, r *http.Request) {
+func (c *config) putOrPatchDoc(srv *Server, path string, schema string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path = path + "/" + mux.Vars(r)["name"]
 
@@ -122,7 +158,7 @@ func putOrPatchDoc(srv *Server, path string, schema string) func(w http.Response
 }
 
 // getDoc get document.
-func getDoc(srv *Server, path string) func(w http.ResponseWriter, r *http.Request) {
+func (c *config) getDoc(srv *Server, path string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 		if name != "" {
@@ -153,18 +189,8 @@ func deleteDoc(srv *Server, path string) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-// New server.
-func New(routes cfg.Routes) *Server {
-	srv := &Server{}
-
-	// Connect to etcd.
-	//	log.Infof("Connecting to etcd: %s", cfg.Etcd.Peers)
-	//	srv.kapi := etcd.NewKeyAPI(cfg)
-
-	// Create new router.
-	srv.router = mux.NewRouter()
-
-	// Add routes.
+// AddRoute
+/*
 	for _, route := range routes {
 		path := "/" + srv.APIVersion + route.Endpoint
 		log.Infof("Add endpoint: %s etcd path: %s", path, route.Path)
@@ -174,15 +200,11 @@ func New(routes cfg.Routes) *Server {
 		srv.router.HandleFunc(path+"/{name}", putOrPatch(cfg, path, route.Schema)).Methods("PATCH")
 		srv.router.HandleFunc(path+"/{name}", deleteDoc(cfg, path)).Methods("DELETE")
 	}
-}
+*/
 
 // Run server.
-func (srv *Server) Run() {
-	// Fire up the server
-	log.Infof("Bind to: %s", cfg.Bind)
-	logr := handlers.LoggingHandler(os.Stdout, r)
-	err := http.ListenAndServe(cfg.Bind, logr)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+func (c *config) Run() error {
+	log.Infof("Bind to: %s", c.bind)
+	logr := handlers.LoggingHandler(os.Stderr, r)
+	return http.ListenAndServe(c.bind, logr)
 }
