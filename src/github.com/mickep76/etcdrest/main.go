@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -28,6 +27,8 @@ func main() {
 		cli.StringFlag{Name: "user, u", Value: "", Usage: "User"},
 		cli.DurationFlag{Name: "timeout, t", Value: time.Second, Usage: "Connection timeout"},
 		cli.DurationFlag{Name: "command-timeout, T", Value: 5 * time.Second, Usage: "Command timeout"},
+		cli.StringFlag{Name: "bind, b", Value: "0.0.0.0:8080", EnvVar: "ETCDREST_BIND", Usage: "Bind address"},
+		cli.StringFlag{Name: "api-version, V", Value: "v1", EnvVar: "ETCDREST_API_VERSION", Usage: "API Version"},
 	}
 	app.Commands = []cli.Command{
 		{
@@ -50,6 +51,10 @@ func main() {
 }
 
 func runServer(c *cli.Context) {
+	if c.GlobalBool("debug") {
+		log.SetDebug()
+	}
+
 	// Create etcd config.
 	ec := etcd.New()
 	ec.Peers(c.GlobalString("peers"))
@@ -75,13 +80,6 @@ func runServer(c *cli.Context) {
 		log.Fatal(err.Error())
 	}
 
-	// Get document from etcd.
-	doc, _, err := es.Get("/")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	fmt.Println(doc)
-
 	// Create server config.
 	sc := server.New(es)
 	sc.Bind(c.GlobalString("bind"))
@@ -89,7 +87,12 @@ func runServer(c *cli.Context) {
 	sc.Envelope(c.GlobalBool("envelope"))
 	sc.Indent(c.GlobalBool("indent"))
 
-	//	sc.Run()
+	sc.EtcdRoute("/hosts", "/hosts", "file://schemas/hosts.json")
+
+	// Start server.
+	if err := sc.Run(); err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func printConfig(c *cli.Context) {

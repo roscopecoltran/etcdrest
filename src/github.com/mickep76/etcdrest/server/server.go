@@ -26,6 +26,7 @@ type Config interface {
 	APIVersion(string) Config
 	Envelope(bool) Config
 	Indent(bool) Config
+	EtcdRoute(string, string, string)
 	Run() error
 }
 
@@ -207,18 +208,17 @@ func (c *config) deleteDoc(path string) func(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// AddRoute
-/*
-	for _, route := range routes {
-		path := "/" + srv.APIVersion + route.Endpoint
-		log.Infof("Add endpoint: %s etcd path: %s", path, route.Path)
-		srv.router.HandleFunc(path, getDoc(srv, path)).Methods("GET")
-		srv.router.HandleFunc(path+"/{name}", getDoc(srv, path)).Methods("GET")
-		srv.router.HandleFunc(path+"/{name}", putOrPatch(srv, path, route.Schema)).Methods("PUT")
-		srv.router.HandleFunc(path+"/{name}", putOrPatch(cfg, path, route.Schema)).Methods("PATCH")
-		srv.router.HandleFunc(path+"/{name}", deleteDoc(cfg, path)).Methods("DELETE")
-	}
-*/
+// EtcdRoute add route for etcd.
+func (c *config) EtcdRoute(endpoint, path, schema string) {
+	url := "/" + c.apiVersion + endpoint
+	log.Infof("Add endpoint: %s etcd path: %s", url, path)
+
+	c.router.HandleFunc(url, c.getDoc(path)).Methods("GET")
+	c.router.HandleFunc(url+"/{name}", c.getDoc(path)).Methods("GET")
+	c.router.HandleFunc(url+"/{name}", c.putOrPatchDoc(path, schema)).Methods("PUT")
+	c.router.HandleFunc(url+"/{name}", c.putOrPatchDoc(path, schema)).Methods("PATCH")
+	c.router.HandleFunc(url+"/{name}", c.deleteDoc(path)).Methods("DELETE")
+}
 
 // Run server.
 func (c *config) Run() error {
