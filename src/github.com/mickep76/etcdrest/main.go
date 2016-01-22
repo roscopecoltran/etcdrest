@@ -34,7 +34,7 @@ func main() {
 			Name:   "server",
 			Usage:  "Start REST API server",
 			Flags:  []cli.Flag{},
-			Action: server,
+			Action: runServer,
 		},
 		{
 			Name:  "print-config",
@@ -49,7 +49,7 @@ func main() {
 	app.Run(os.Args)
 }
 
-func server(c *cli.Context) {
+func runServer(c *cli.Context) {
 	// Create etcd config.
 	ec := etcd.New()
 	ec.Peers(c.GlobalString("peers"))
@@ -83,11 +83,11 @@ func server(c *cli.Context) {
 	fmt.Println(doc)
 
 	// Create server config.
-	sc := server.New()
+	sc := server.New(es)
 	sc.Bind(c.GlobalString("bind"))
 	sc.APIVersion(c.GlobalString("api-version"))
-	sc.Envelope(c.GlobalString("envelope"))
-	sc.Indent(c.GlobalString("indent"))
+	sc.Envelope(c.GlobalBool("envelope"))
+	sc.Indent(c.GlobalBool("indent"))
 
 	//	sc.Run()
 }

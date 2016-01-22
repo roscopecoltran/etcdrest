@@ -1,14 +1,14 @@
 package server
 
 import (
-	//	"encoding/json"
-	//"fmt"
+	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	//	"reflect"
-	//"strings"
+	"strings"
 
 	"github.com/evanphx/json-patch"
 	"github.com/gorilla/handlers"
@@ -87,7 +87,7 @@ func (c *config) patchDoc(origDoc, patchDoc []byte) ([]byte, int, error) {
 	return doc, http.StatusOK, nil
 }
 
-func (c *config) validateDoc(doc []byte, schema string) (int, error) {
+func (c *config) validateDoc(doc []byte, path string, schema string) (int, []error) {
 	// Prepare document and JSON schema.
 	docLoader := gojsonschema.NewStringLoader(string(doc))
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
@@ -95,19 +95,17 @@ func (c *config) validateDoc(doc []byte, schema string) (int, error) {
 	// Validate document using JSON schema.
 	res, err := gojsonschema.Validate(schemaLoader, docLoader)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, []error{err}
 	}
 
-	/*
-		if !res.Valid() {
-			var errors []string
-			for _, e := range res.Errors() {
-				errors = append(errors, fmt.Sprintf("%s: %s", strings.Replace(e.Context().String("/"), "(root)", path, 1), e.Description()))
-			}
-
-			return http.StatusBadRequest, errors
+	if !res.Valid() {
+		var errors []error
+		for _, e := range res.Errors() {
+			errors = append(errors, fmt.Errorf("%s: %s", strings.Replace(e.Context().String("/"), "(root)", path, 1), e.Description()))
 		}
-	*/
+
+		return http.StatusBadRequest, errors
+	}
 
 	return http.StatusOK, nil
 }
@@ -120,26 +118,32 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 		// Get request body.
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 		if err != nil {
-			c.writeErrors(w, r, err.Error(), http.StatusInternalServerError)
+			c.writeError(w, r, err, http.StatusInternalServerError)
 			return
 		}
 		if err := r.Body.Close(); err != nil {
-			c.writeErrors(w, r, err.Error(), http.StatusInternalServerError)
+			c.writeError(w, r, err, http.StatusInternalServerError)
 			return
 		}
 
 		// Patch document using JSON patch RFC 6902.
 		var doc []byte
 		if r.Method == "PATCH" {
-			origDoc, code, err := c.session.Get(path)
+			data, code, err := c.session.Get(path)
 			if err != nil {
-				c.writeErrors(w, r, err.Error(), code)
+				c.writeError(w, r, err, code)
+				return
+			}
+
+			origDoc, err := json.Marshal(&data)
+			if err != nil {
+				c.writeError(w, r, err, http.StatusInternalServerError)
 				return
 			}
 
 			doc, code, err = c.patchDoc(origDoc, body)
 			if err != nil {
-				c.writeErrors(w, r, err.Error(), code)
+				c.writeError(w, r, err, code)
 				return
 			}
 		} else {
@@ -147,16 +151,20 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 		}
 
 		// Validate document using JSON schema
-		code, err := c.validateDoc(body, schema)
-		if err != nil {
-			c.writeErrors(w, r, doc, code)
+		if code, errors := c.validateDoc(doc, path, schema); err != nil {
+			c.writeErrors(w, r, errors, code)
+			return
+		}
+
+		var data interface{}
+		if err := json.Unmarshal(doc, data); err != nil {
+			c.writeError(w, r, err, http.StatusInternalServerError)
 			return
 		}
 
 		// Create document.
-		code, err := c.session.Put(path, body)
-		if err != nil {
-			c.writeErrors(w, r, err.Error(), code)
+		if code, err := c.session.Put(path, data); err != nil {
+			c.writeError(w, r, err, code)
 			return
 		}
 
@@ -173,8 +181,8 @@ func (c *config) getDoc(path string) func(w http.ResponseWriter, r *http.Request
 		}
 
 		doc, code, err := c.session.Get(path)
-		if code != http.StatusOK {
-			c.writeErrors(w, r, doc, code)
+		if err != nil {
+			c.writeError(w, r, err, code)
 		}
 
 		c.write(w, r, doc)
@@ -182,17 +190,20 @@ func (c *config) getDoc(path string) func(w http.ResponseWriter, r *http.Request
 }
 
 // deleteDoc delete document.
-func deleteDoc(srv *Server, path string) func(w http.ResponseWriter, r *http.Request) {
+func (c *config) deleteDoc(path string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		path := rpath + "/" + mux.Vars(r)["name"]
+		path := path + "/" + mux.Vars(r)["name"]
 
-		doc, code, err := c.session.Get(path)
-		if code != http.StatusOK {
-			c.writeErrors(w, r, doc, code)
+		data, code, err := c.session.Get(path)
+		if err != nil {
+			c.writeError(w, r, err, code)
 		}
 
-		code, err := etcd.Delete(path)
-		c.write(w, r, doc, code)
+		if code, err := c.session.Delete(path); err != nil {
+			c.writeError(w, r, err, code)
+		}
+
+		c.write(w, r, data)
 	}
 }
 
@@ -212,6 +223,6 @@ func deleteDoc(srv *Server, path string) func(w http.ResponseWriter, r *http.Req
 // Run server.
 func (c *config) Run() error {
 	log.Infof("Bind to: %s", c.bind)
-	logr := handlers.LoggingHandler(os.Stderr, r)
+	logr := handlers.LoggingHandler(os.Stderr, c.router)
 	return http.ListenAndServe(c.bind, logr)
 }
