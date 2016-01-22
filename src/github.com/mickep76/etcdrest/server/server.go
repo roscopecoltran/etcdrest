@@ -28,19 +28,19 @@ type Server struct {
 	Bind       string
 	APIVersion string
 	Envelope   bool
-	
-	router	*mux.Router
-	etcd *etcd.Etcd
+
+	router *mux.Router
+	etcd   *etcd.Etcd
 }
 
-func patchDoc(origDoc, patchDoc []byte) ([]byte, int, error)
+func patchDoc(origDoc, patchDoc []byte) ([]byte, int, error) {
 	// Prepare JSON patch.
-	patch, err := jsonpatch.DecodePatch(patch)
+	patch, err := jsonpatch.DecodePatch(patchDoc)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 
-	// Apply JSON patch.			
+	// Apply JSON patch.
 	doc, err = patch.ApplyIndent(inpDoc, "  ")
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
@@ -53,20 +53,20 @@ func validateDoc(doc []byte, schema string) (int, []error) {
 	// Prepare document and JSON schema.
 	docLoader := gojsonschema.NewStringLoader(string(doc))
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
-		
+
 	// Validate document using JSON schema.
 	res, err := gojsonschema.Validate(schemaLoader, docLoader)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-		
+
 	if !res.Valid() {
 		var errors []string
 		for _, e := range res.Errors() {
 			errors = append(errors, fmt.Sprintf("%s: %s", strings.Replace(e.Context().String("/"), "(root)", path, 1), e.Description()))
 		}
 
-		return  http.StatusBadRequest, errors
+		return http.StatusBadRequest, errors
 	}
 
 	return http.StatusOK, nil
@@ -147,22 +147,22 @@ func deleteDoc(srv *Server, path string) func(w http.ResponseWriter, r *http.Req
 		if code != http.StatusOK {
 			write(srv, w, r, doc, code)
 		}
-		
+
 		code, err := etcd.Delete(path)
 		writeDoc(srv, w, r, doc, code)
 	}
 }
 
 // New server.
-func New(routes cfg.Routes) (*Server) {
+func New(routes cfg.Routes) *Server {
 	srv := &Server{}
 
 	// Connect to etcd.
-//	log.Infof("Connecting to etcd: %s", cfg.Etcd.Peers)
-//	srv.kapi := etcd.NewKeyAPI(cfg)
+	//	log.Infof("Connecting to etcd: %s", cfg.Etcd.Peers)
+	//	srv.kapi := etcd.NewKeyAPI(cfg)
 
 	// Create new router.
-	srv.router := mux.NewRouter()
+	srv.router = mux.NewRouter()
 
 	// Add routes.
 	for _, route := range routes {
