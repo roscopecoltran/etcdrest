@@ -23,7 +23,7 @@ type Config interface {
 	Pass(string) Config
 	Timeout(time.Duration) Config
 	CmdTimeout(time.Duration) Config
-	Connect() Session
+	Connect() (Session, error)
 }
 
 // Session interface.
@@ -35,14 +35,14 @@ type Session interface {
 
 // config struct.
 type config struct {
-	peers      string        `json:"peers,omitempty" yaml:"peers,omitempty" toml:"peers,omitempty"`
-	cert       string        `json:"cert,omitempty" yaml:"cert,omitempty" toml:"cert,omitempty"`
-	key        string        `json:"key,omitempty" yaml:"key,omitempty" toml:"key,omitempty"`
-	ca         string        `json:"ca,omitempty" yaml:"ca,omitempty" toml:"peers,omitempty"`
-	user       string        `json:"user,omitempty" yaml:"user,omitempty" toml:"user,omitempty"`
-	pass       string        `json:"pass,omitempty" yaml:"pass,omitempty" toml:"pass,omitempty"`
-	timeout    time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty" toml:"timeout,omitempty"`
-	cmdTimeout time.Duration `json:"cmdTimeout,omitempty" yaml:"cmdTimeout,omitempty" toml:"cmdTimeout,omitempty"`
+	peers      string
+	cert       string
+	key        string
+	ca         string
+	user       string
+	pass       string
+	timeout    time.Duration
+	cmdTimeout time.Duration
 }
 
 // session struct.
@@ -51,7 +51,7 @@ type session struct {
 	keysAPI client.KeysAPI
 }
 
-// NewConfig config constructor.
+// New config constructor.
 func New() Config {
 	return &config{
 		peers:      "http://127.0.0.1:4001,http://127.0.0.1:2379",
@@ -82,6 +82,11 @@ func (c *config) CA(ca string) Config {
 
 func (c *config) User(user string) Config {
 	c.user = user
+	return c
+}
+
+func (c *config) Pass(pass string) Config {
+	c.pass = pass
 	return c
 }
 
