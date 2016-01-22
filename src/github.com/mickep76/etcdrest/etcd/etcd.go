@@ -1,12 +1,15 @@
 package etcd
 
 import (
+	"encoding/json"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/coreos/etcd/client"
 	"github.com/coreos/etcd/pkg/transport"
+	"github.com/mickep76/etcdmap"
 	"golang.org/x/net/context"
 )
 
@@ -27,7 +30,7 @@ type Config interface {
 type Session interface {
 	Put(string, []byte) (interface{}, int, error)
 	Delete(string) (int, error)
-	Get(string) ([]byte, int, error))
+	Get(string) (interface{}, int, error)
 }
 
 // config struct.
@@ -37,6 +40,7 @@ type config struct {
 	key        string        `json:"key,omitempty" yaml:"key,omitempty" toml:"key,omitempty"`
 	ca         string        `json:"ca,omitempty" yaml:"ca,omitempty" toml:"peers,omitempty"`
 	user       string        `json:"user,omitempty" yaml:"user,omitempty" toml:"user,omitempty"`
+	pass       string        `json:"pass,omitempty" yaml:"pass,omitempty" toml:"pass,omitempty"`
 	timeout    time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty" toml:"timeout,omitempty"`
 	cmdTimeout time.Duration `json:"cmdTimeout,omitempty" yaml:"cmdTimeout,omitempty" toml:"cmdTimeout,omitempty"`
 }
@@ -48,7 +52,7 @@ type session struct {
 }
 
 // NewConfig config constructor.
-func NewConfig() Config {
+func New() Config {
 	return &config{
 		peers:      "http://127.0.0.1:4001,http://127.0.0.1:2379",
 		timeout:    time.Second,
@@ -107,38 +111,33 @@ func (c *config) newClient() (client.Client, error) {
 
 	return client.New(client.Config{
 		Transport:               tr,
-		Endpoints:               strings.Split(c.Peers, ","),
-		HeaderTimeoutPerRequest: c.Timeout,
-		Username:                c.User,
-		Password:                c.Pass,
+		Endpoints:               strings.Split(c.peers, ","),
+		HeaderTimeoutPerRequest: c.timeout,
+		Username:                c.user,
+		Password:                c.pass,
 	})
 }
 
 func (c *config) Connect() (Session, error) {
-	cl, err := newClient()
-	if err != nil {
-		return nil, err
-	}
-
-	kapi, err := client.NewKeysAPI(cl)
+	cl, err := c.newClient()
 	if err != nil {
 		return nil, err
 	}
 
 	return &session{
 		client:  cl,
-		keysAPI: kapi,
-	}
+		keysAPI: client.NewKeysAPI(cl),
+	}, nil
 }
 
-// Create document.
-func (s *Session) Put(path string, doc []byte) (interface{}, int, error) {
+// Put document.
+func (s *session) Put(path string, doc []byte) (interface{}, int, error) {
 	var d interface{}
 	if err := json.Unmarshal(doc, &d); err != nil {
 		return nil, http.StatusBadRequest, err
 	}
 
-	if err = etcdmap.Create(etcd.keyAPI, path, reflect.ValueOf(d)); err != nil {
+	if err := etcdmap.Create(s.keysAPI, path, reflect.ValueOf(d)); err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 
@@ -146,27 +145,27 @@ func (s *Session) Put(path string, doc []byte) (interface{}, int, error) {
 }
 
 // Get document.
-func (s *Session) Get(path string) ([]byte, int, error) {
-	res, err := srv.keyAPI.Get(context.TODO(), path, &client.GetOptions{Recursive: true})
+func (s *session) Get(path string) (interface{}, int, error) {
+	res, err := s.keysAPI.Get(context.TODO(), path, &client.GetOptions{Recursive: true})
 	if err != nil {
 		// Document doesn't exist.
 		if cerr, ok := err.(client.Error); ok && cerr.Code == 100 {
-			return http.StatusNotFound, err.Error
+			return nil, http.StatusNotFound, err
 		}
 
 		// Error retrieving document.
-		return http.StatusInternalServerError, err
+		return nil, http.StatusInternalServerError, err
 	}
 
-	return etcdmap.Map(res.Node), nil
+	return etcdmap.Map(res.Node), http.StatusOK, nil
 }
 
 // Delete document.
 func (s *session) Delete(path string) (int, error) {
-	if _, err := etcd.keyAPI.Delete(context.TODO(), path, &client.DeleteOptions{Recursive: true}); err != nil {
+	if _, err := s.keysAPI.Delete(context.TODO(), path, &client.DeleteOptions{Recursive: true}); err != nil {
 		// Pocument doesn't exist.
 		if cerr, ok := err.(client.Error); ok && cerr.Code == 100 {
-			return http.StatusNotFound, err.Error
+			return http.StatusNotFound, err
 		}
 
 		// Error deleting document.
