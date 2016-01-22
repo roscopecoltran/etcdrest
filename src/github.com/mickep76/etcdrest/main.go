@@ -1,18 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/bgentry/speakeasy"
 	"github.com/codegangsta/cli"
 
-	"github.com/mickep76/etcdrest/config"
-	"github.com/mickep76/etcdrest/server"
+	"github.com/mickep76/etcdrest/etcd"
+	"github.com/mickep76/etcdrest/log"
 )
 
 func main() {
-	cfg := config.New()
-
 	app := cli.NewApp()
 	app.Name = "etcdrest"
 	app.Version = Version
@@ -30,13 +30,10 @@ func main() {
 	}
 	app.Commands = []cli.Command{
 		{
-			Name:  "server",
-			Usage: "Start REST API server",
-			Flags: []cli.Flag{},
-			Action: func(c *cli.Context) {
-				cfg.Load(c)
-				server.Run(cfg)
-			},
+			Name:   "server",
+			Usage:  "Start REST API server",
+			Flags:  []cli.Flag{},
+			Action: server,
 		},
 		{
 			Name:  "print-config",
@@ -44,25 +41,46 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "format, f", EnvVar: "ETCDREST_FORMAT", Value: "JSON", Usage: "Data serialization format YAML, TOML or JSON"},
 			},
-			Action: func(c *cli.Context) {
-				cfg.Load(c)
-				cfg.Print(c)
-			},
+			Action: printConfig,
 		},
 	}
 
 	app.Run(os.Args)
+}
 
-	/*
-		// Get Base URI
-		if cfg.BaseURI == "" && *baseURI == "" {
-			hostname, err := os.Hostname()
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-			port := strings.Split(*bind, ":")[1]
-			str := "http://" + hostname + ":" + port + "/v1"
-			cfg.BaseURI = str
+func server(c *cli.Context) {
+	// Create etcd config.
+	ec := etcd.New()
+	ec.Peers(c.GlobalString("peers"))
+	ec.Cert(c.GlobalString("cert"))
+	ec.Key(c.GlobalString("key"))
+	ec.CA(c.GlobalString("ca"))
+	ec.Timeout(c.GlobalDuration("timeout"))
+	ec.CmdTimeout(c.GlobalDuration("command-timeout"))
+
+	// If user is set ask for password.
+	if c.GlobalString("user") != "" {
+		ec.User(c.GlobalString("user"))
+		pass, err := speakeasy.Ask("Password: ")
+		if err != nil {
+			log.Fatal(err.Error())
 		}
-	*/
+		ec.Pass(pass)
+	}
+
+	// Connect to etcd server.
+	es, err := ec.Connect()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// Get document from etcd.
+	doc, _, err := es.Get("/")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	fmt.Println(doc)
+}
+
+func printConfig(c *cli.Context) {
 }

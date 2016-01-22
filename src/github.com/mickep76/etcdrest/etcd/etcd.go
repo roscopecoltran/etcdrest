@@ -1,7 +1,6 @@
 package etcd
 
 import (
-	"encoding/json"
 	"net/http"
 	"reflect"
 	"strings"
@@ -28,7 +27,7 @@ type Config interface {
 
 // Session interface.
 type Session interface {
-	Put(string, []byte) (interface{}, int, error)
+	Put(string, interface{}) (int, error)
 	Delete(string) (int, error)
 	Get(string) (interface{}, int, error)
 }
@@ -136,22 +135,17 @@ func (c *config) Connect() (Session, error) {
 }
 
 // Put document.
-func (s *session) Put(path string, doc []byte) (interface{}, int, error) {
-	var d interface{}
-	if err := json.Unmarshal(doc, &d); err != nil {
-		return nil, http.StatusBadRequest, err
+func (s *session) Put(p string, d interface{}) (int, error) {
+	if err := etcdmap.Create(s.keysAPI, p, reflect.ValueOf(d)); err != nil {
+		return http.StatusInternalServerError, err
 	}
 
-	if err := etcdmap.Create(s.keysAPI, path, reflect.ValueOf(d)); err != nil {
-		return nil, http.StatusInternalServerError, err
-	}
-
-	return d, http.StatusOK, nil
+	return http.StatusOK, nil
 }
 
 // Get document.
-func (s *session) Get(path string) (interface{}, int, error) {
-	res, err := s.keysAPI.Get(context.TODO(), path, &client.GetOptions{Recursive: true})
+func (s *session) Get(p string) (interface{}, int, error) {
+	res, err := s.keysAPI.Get(context.TODO(), p, &client.GetOptions{Recursive: true})
 	if err != nil {
 		// Document doesn't exist.
 		if cerr, ok := err.(client.Error); ok && cerr.Code == 100 {
