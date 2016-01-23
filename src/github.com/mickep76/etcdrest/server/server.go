@@ -158,7 +158,7 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 		}
 
 		var data interface{}
-		if err := json.Unmarshal(doc, data); err != nil {
+		if err := json.Unmarshal(doc, &data); err != nil {
 			c.writeError(w, r, err, http.StatusInternalServerError)
 			return
 		}
