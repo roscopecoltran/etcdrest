@@ -146,7 +146,7 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 		}
 
 		// Validate document using JSON schema
-		if code, errors := c.validateDoc(doc, npath, schema); err != nil {
+		if code, errors := c.validateDoc(doc, npath, schema); errors != nil {
 			c.writeErrors(w, r, errors, code)
 			return
 		}

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "Hosts Schema",
+  "title": "Host Schema",
   "type": "object",
   "additionalProperties": false,
   "required": [

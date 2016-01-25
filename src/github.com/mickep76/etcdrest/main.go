@@ -87,7 +87,7 @@ func runServer(c *cli.Context) {
 	sc.Envelope(c.GlobalBool("envelope"))
 	//	sc.Indent(c.GlobalBool("indent"))
 
-	sc.RouteEtcd("/api/hosts", "/hosts", "file://schemas/hosts.json")
+	sc.RouteEtcd("/api/hosts", "/hosts", "file://schemas/host.json")
 	sc.RouteTemplate("/hosts/{name}", "/hosts/", "host")
 
 	// Start server.
