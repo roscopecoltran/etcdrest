@@ -29,17 +29,17 @@ curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test2.example.co
 cpt "Get hosts"
 curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
 
-#cpt "Update host 1"
-#curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test1.example.com-update.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
+cpt "Update host 1"
+curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test1.example.com-update.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
 
-#cpt "Get hosts"
-#curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
+cpt "Get hosts"
+curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
 
-#cpt "Patch host 1"
-#curl -s -i -H "Content-Type: application/json" -X PATCH -d "$(cat test1.example.com-patch.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
+cpt "Patch host 1"
+curl -s -i -H "Content-Type: application/json" -X PATCH -d "$(cat test1.example.com-patch.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
 
-#cpt "Get hosts"
-#curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
+cpt "Get hosts"
+curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
 
 #cpt "Delete host 1"
 #curl -s -i -H "Content-Type: application/json" -X DELETE "${URL}/${APIVERS}/hosts/test1.example.com"

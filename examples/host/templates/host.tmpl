@@ -1,3 +1,5 @@
 {{define "host"}}
 {{.}}
+{{$h := get (print "/hosts/" .vars.name)}}
+{{$h}}
 {{end}}

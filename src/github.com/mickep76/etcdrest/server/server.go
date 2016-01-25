@@ -18,6 +18,8 @@ import (
 	"github.com/mickep76/etcdrest/log"
 )
 
+var session etcd.Session
+
 // Config interface.
 type Config interface {
 	Bind(string) Config
@@ -25,7 +27,7 @@ type Config interface {
 	Envelope(bool) Config
 	Indent(bool) Config
 	RouteEtcd(string, string, string)
-	RouteTemplate(string, string, string)
+	RouteTemplate(string, string)
 	Run() error
 }
 
@@ -218,6 +220,8 @@ func (c *config) RouteEtcd(endpoint, path, schema string) {
 
 // Run server.
 func (c *config) Run() error {
+	session = c.session
+
 	log.Infof("Bind to: %s", c.bind)
 	logr := handlers.LoggingHandler(os.Stderr, c.router)
 	return http.ListenAndServe(c.bind, logr)
