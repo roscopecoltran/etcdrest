@@ -46,11 +46,12 @@ func (c *config) RouteTemplate(endpoint, path, templ string) {
 func (c *config) getTemplate(path string, templ string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
+		npath := path
 		if name != "" {
-			path = path + "/" + name
+			npath = npath + "/" + name
 		}
 
-		data, code, err := c.session.Get(path)
+		data, code, err := c.session.Get(npath)
 		if err != nil {
 			c.writeError(w, r, err, code)
 		}
