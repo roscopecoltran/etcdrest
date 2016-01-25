@@ -27,8 +27,8 @@ start() {
 }
 
 stop() {
-    docker stop ${NAME}0
-    docker rm ${NAME}0
+    docker stop ${NAME}
+    docker rm ${NAME}
 }
 
 status() {

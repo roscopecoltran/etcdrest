@@ -85,9 +85,10 @@ func runServer(c *cli.Context) {
 	sc.Bind(c.GlobalString("bind"))
 	sc.APIVersion(c.GlobalString("api-version"))
 	sc.Envelope(c.GlobalBool("envelope"))
-	sc.Indent(c.GlobalBool("indent"))
+	//	sc.Indent(c.GlobalBool("indent"))
 
-	sc.EtcdRoute("/hosts", "/hosts", "file://schemas/hosts.json")
+	sc.RouteEtcd("/api/hosts", "/hosts", "file://schemas/hosts.json")
+	sc.RouteTemplate("/hosts/{name}", "/hosts/", "host")
 
 	// Start server.
 	if err := sc.Run(); err != nil {

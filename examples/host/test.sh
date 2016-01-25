@@ -6,7 +6,7 @@ unset CLICOLOR
 unset GREP_OPTIONS
 
 #TMPFILE="/tmp/test.json"
-APIVERS="v1"
+APIVERS="v1/api"
 URL="http://localhost:8080"
 
 cpt() {
@@ -20,34 +20,34 @@ fatal() {
 
 which curl &>/dev/null || fatal "Missing binary: curl"
 
-cpt "Create host 1"
+cpt "Create host 1: ${URL}/${APIVERS}/hosts/test1.example.com"
 curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test1.example.com.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
 
-cpt "Create host 2"
+cpt "Create host 2: ${URL}/${APIVERS}/hosts/test2.example.com"
 curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test2.example.com.json)" "${URL}/${APIVERS}/hosts/test2.example.com"
 
 cpt "Get hosts"
 curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
 
-cpt "Update host 1"
-curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test1.example.com-update.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
+#cpt "Update host 1"
+#curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test1.example.com-update.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
 
-cpt "Get hosts"
-curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
+#cpt "Get hosts"
+#curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
 
-cpt "Patch host 1"
-curl -s -i -H "Content-Type: application/json" -X PATCH -d "$(cat test1.example.com-patch.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
+#cpt "Patch host 1"
+#curl -s -i -H "Content-Type: application/json" -X PATCH -d "$(cat test1.example.com-patch.json)" "${URL}/${APIVERS}/hosts/test1.example.com"
 
-cpt "Get hosts"
-curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
+#cpt "Get hosts"
+#curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
 
-cpt "Delete host 1"
-curl -s -i -H "Content-Type: application/json" -X DELETE "${URL}/${APIVERS}/hosts/test1.example.com"
+#cpt "Delete host 1"
+#curl -s -i -H "Content-Type: application/json" -X DELETE "${URL}/${APIVERS}/hosts/test1.example.com"
 
-cpt "Delete host 2"
-curl -s -i -H "Content-Type: application/json" -X DELETE "${URL}/${APIVERS}/hosts/test2.example.com"
+#cpt "Delete host 2"
+#curl -s -i -H "Content-Type: application/json" -X DELETE "${URL}/${APIVERS}/hosts/test2.example.com"
 
-cpt "Get hosts"
-curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
+#cpt "Get hosts"
+#curl -s -i -H "Content-Type: application/json" "${URL}/${APIVERS}/hosts"
 
 echo
