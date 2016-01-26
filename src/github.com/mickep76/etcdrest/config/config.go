@@ -35,8 +35,10 @@ type Etcd struct {
 
 // Route struct.
 type Route struct {
-	Path     string `json:"path"`
 	Endpoint string `json:"endpoint"`
+	Type     string `json:"type"`
+	Template string `json:"template"`
+	Path     string `json:"path"`
 	Schema   string `json:"schema"`
 }
 
@@ -65,9 +67,9 @@ func (cfg *Config) Load(c *cli.Context) {
 	// Default path for config file.
 	u, _ := user.Current()
 	cfgs := []string{
-		"/etcd/etcdrest.json",
-		"/etcd/etcdrest.yaml",
-		"/etcd/etcdrest.toml",
+		"/etc/etcdrest.json",
+		"/etc/etcdrest.yaml",
+		"/etc/etcdrest.toml",
 		u.HomeDir + "/.etcdrest.json",
 		u.HomeDir + "/.etcdrest.yaml",
 		u.HomeDir + "/.etcdrest.toml",

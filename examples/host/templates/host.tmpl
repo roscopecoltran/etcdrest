@@ -1,5 +1,7 @@
 {{define "host"}}
 {{.}}
-{{$h := get (print "/hosts/" .vars.name)}}
+{{$h := get (print "/host/" .vars.name)}}
 {{$h}}
+{{$i := get "/image"}}
+{{$i}}
 {{end}}
