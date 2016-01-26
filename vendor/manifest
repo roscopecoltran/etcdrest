@@ -16,55 +16,55 @@
 		{
 			"importpath": "github.com/codegangsta/cli",
 			"repository": "https://github.com/codegangsta/cli",
-			"revision": "c31a7975863e7810c92e2e288a9ab074f9a88f29",
+			"revision": "f9cc3001e04f9783cb4ad08ca6791aa07134787c",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/github.com/ugorji/go/codec",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "9ca3c8e5813e83b7f32b64c4037f569143f59445",
+			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
 			"branch": "master",
 			"path": "/Godeps/_workspace/src/github.com/ugorji/go/codec"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "9ca3c8e5813e83b7f32b64c4037f569143f59445",
+			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
 			"branch": "master",
 			"path": "/Godeps/_workspace/src/golang.org/x/net/context"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/client",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "9ca3c8e5813e83b7f32b64c4037f569143f59445",
+			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
 			"branch": "master",
 			"path": "/client"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/pathutil",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "9ca3c8e5813e83b7f32b64c4037f569143f59445",
+			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
 			"branch": "master",
 			"path": "/pkg/pathutil"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/transport",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "092879291fa5ee3119e1150ed4f6e1b95da90322",
+			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
 			"branch": "master",
 			"path": "/pkg/transport"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/types",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "9ca3c8e5813e83b7f32b64c4037f569143f59445",
+			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
 			"branch": "master",
 			"path": "/pkg/types"
 		},
 		{
 			"importpath": "github.com/evanphx/json-patch",
 			"repository": "https://github.com/evanphx/json-patch",
-			"revision": "766277e6183f343431bef432994d06c24459e3ef",
+			"revision": "c56073cf494de2499b953c98c3302f783e4b590b",
 			"branch": "master"
 		},
 		{
@@ -86,30 +86,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/hashicorp/hcl",
-			"repository": "https://github.com/hashicorp/hcl",
-			"revision": "578dd9746824a54637686b51a41bad457a56bcef",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/kr/pretty",
-			"repository": "https://github.com/kr/pretty",
-			"revision": "e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/kr/text",
-			"repository": "https://github.com/kr/text",
-			"revision": "bb797dc4fb8320488f47bf11de07a733d7233e1f",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/magiconair/properties",
-			"repository": "https://github.com/magiconair/properties",
-			"revision": "c81f9d71af8f8cba1466501d30326b99a4e56c19",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/mickep76/etcdmap",
 			"repository": "https://github.com/mickep76/etcdmap",
 			"revision": "7128b59ea24bc4ad44b1eb0e1c9998459c01fc80",
@@ -119,49 +95,6 @@
 			"importpath": "github.com/mickep76/iodatafmt",
 			"repository": "https://github.com/mickep76/iodatafmt",
 			"revision": "b597e16ba86d5b61a9fc26e0d7cfa92682009e1d",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/mitchellh/mapstructure",
-			"repository": "https://github.com/mitchellh/mapstructure",
-			"revision": "281073eb9eb092240d33ef253c404f1cca550309",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/cast",
-			"repository": "https://github.com/spf13/cast",
-			"revision": "ee7b3e0353166ab1f3a605294ac8cd2b77953778",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/cobra",
-			"repository": "https://github.com/spf13/cobra",
-			"revision": "8e91712f174ced10270cf66615e0a9127e7c4de5",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/cobra/cobra",
-			"repository": "https://github.com/spf13/cobra",
-			"revision": "8e91712f174ced10270cf66615e0a9127e7c4de5",
-			"branch": "master",
-			"path": "/cobra"
-		},
-		{
-			"importpath": "github.com/spf13/jwalterweatherman",
-			"repository": "https://github.com/spf13/jwalterweatherman",
-			"revision": "d00654080cddbd2b082acaa74007cb94a2b40866",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/pflag",
-			"repository": "https://github.com/spf13/pflag",
-			"revision": "7f60f83a2c81bc3c3c0d5297f61ddfa68da9d3b7",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/viper",
-			"repository": "https://github.com/spf13/viper",
-			"revision": "a212099cbe6fbe8d07476bfda8d2d39b6ff8f325",
 			"branch": "master"
 		},
 		{
@@ -185,15 +118,9 @@
 		{
 			"importpath": "golang.org/x/net/context",
 			"repository": "https://go.googlesource.com/net",
-			"revision": "72aa00c6241a8013dc9b040abb45f57edbe73945",
+			"revision": "f315505cf3349909cdf013ea56690da34e96a451",
 			"branch": "master",
 			"path": "/context"
-		},
-		{
-			"importpath": "gopkg.in/fsnotify.v1",
-			"repository": "https://gopkg.in/fsnotify.v1",
-			"revision": "8611c35ab31c1c28aa903d33cf8b6e44a399b09e",
-			"branch": "master"
 		},
 		{
 			"importpath": "gopkg.in/yaml.v2",
