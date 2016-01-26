@@ -4,7 +4,7 @@
       "endpoint": "/hosts",
       "type": "api",
       "path": "/hosts",
-      "schema": "file://schemas/hosts.json"
+      "schema": "file://schemas/host.json"
     },
     {
       "endpoint": "/hosts-tmpl",

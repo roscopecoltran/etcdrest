@@ -196,10 +196,12 @@ func (c *config) deleteDoc(path string) func(w http.ResponseWriter, r *http.Requ
 		data, code, err := c.session.Get(npath)
 		if err != nil {
 			c.writeError(w, r, err, code)
+			return
 		}
 
 		if code, err := c.session.Delete(npath); err != nil {
 			c.writeError(w, r, err, code)
+			return
 		}
 
 		c.write(w, r, data)
