@@ -86,6 +86,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/kezhuw/toml",
+			"repository": "https://github.com/kezhuw/toml",
+			"revision": "d917dda83f61c894db8b67072aedf32025e14c1e",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/mickep76/etcdmap",
 			"repository": "https://github.com/mickep76/etcdmap",
 			"revision": "7128b59ea24bc4ad44b1eb0e1c9998459c01fc80",
@@ -95,6 +101,12 @@
 			"importpath": "github.com/mickep76/iodatafmt",
 			"repository": "https://github.com/mickep76/iodatafmt",
 			"revision": "b597e16ba86d5b61a9fc26e0d7cfa92682009e1d",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/naoina/go-stringutil",
+			"repository": "https://github.com/naoina/go-stringutil",
+			"revision": "6b638e95a32d0c1131db0e7fe83775cbea4a0d0b",
 			"branch": "master"
 		},
 		{

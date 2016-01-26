@@ -1,0 +1,18 @@
+bind = "0.0.0.0:8080"
+apiVersion = "v1"
+envelope = false
+indent = true
+
+[etcd]
+  peers = "http://192.168.99.100:4001"
+
+[[routes]]
+  Endpoint = "/hosts"
+  Type = "api"
+  Path = "/hosts"
+  Schema = "file://schemas/host.json"
+
+[[routes]]
+  Endpoint = "/templ/{name}"
+  Type = "template"
+  Template = "host"

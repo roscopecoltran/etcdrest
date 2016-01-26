@@ -1,16 +1,25 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
+	"path/filepath"
+	"strings"
 	"time"
 
+	//"github.com/BurntSushi/toml"
 	"github.com/codegangsta/cli"
+	"github.com/kezhuw/toml"
+	"gopkg.in/yaml.v2"
 
 	"github.com/mickep76/etcdrest/log"
 )
+
+//var schema = ``
 
 // Config struct.
 type Config struct {
@@ -30,7 +39,7 @@ type Etcd struct {
 	CA         string        `json:"ca,omitempty" yaml:"ca,omitempty" toml:"peers,omitempty"`
 	User       string        `json:"user,omitempty" yaml:"user,omitempty" toml:"user,omitempty"`
 	Timeout    time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty" toml:"timeout,omitempty"`
-	CmdTimeout time.Duration `json:"commandTimeout,omitempty" yaml:"commandTimeout,omitempty" toml:"commandTimeout,omitempty"`
+	CmdTimeout time.Duration `json:"cmdTimeout,omitempty" yaml:"cmdTimeout,omitempty" toml:"cmdTimeout,omitempty"`
 }
 
 // Route struct.
@@ -71,11 +80,11 @@ func (cfg *Config) Load(c *cli.Context) {
 	u, _ := user.Current()
 	cfgs := []string{
 		"/etc/etcdrest.json",
-		//		"/etc/etcdrest.yaml",
-		//		"/etc/etcdrest.toml",
+		"/etc/etcdrest.yaml",
+		"/etc/etcdrest.toml",
 		u.HomeDir + "/.etcdrest.json",
-		//		u.HomeDir + "/.etcdrest.yaml",
-		//		u.HomeDir + "/.etcdrest.toml",
+		u.HomeDir + "/.etcdrest.yaml",
+		u.HomeDir + "/.etcdrest.toml",
 	}
 
 	// Check if we have an arg. for config file and that it exist's.
@@ -90,20 +99,34 @@ func (cfg *Config) Load(c *cli.Context) {
 		if _, err := os.Stat(fn); os.IsNotExist(err) {
 			continue
 		}
+
 		log.Infof("Using config file: %s", fn)
 
 		// Load config file.
-		f, err := os.Open(c.GlobalString("config"))
+		b, err := ioutil.ReadFile(fn)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
+		switch filepath.Ext(fn) {
+		case ".yaml":
+			if err := yaml.Unmarshal(b, cfg); err != nil {
+				log.Fatal(err.Error())
+			}
+		case ".json":
+			if err := json.Unmarshal(b, cfg); err != nil {
+				log.Fatal(err.Error())
+			}
+		case ".toml":
+			if err := toml.Unmarshal(b, cfg); err != nil {
+				log.Fatal(err.Error())
+			}
+		default:
+			log.Fatal("unsupported data format")
+		}
+
 		// Validate config using JSON schema.
 
-		// Decode JSON into struct.
-		if err := json.NewDecoder(f).Decode(cfg); err != nil {
-			log.Fatal(err.Error())
-		}
 		break
 	}
 
@@ -154,13 +177,27 @@ func (cfg *Config) Load(c *cli.Context) {
 	}
 }
 
-func (cfg *Config) Print() {
-	var b []byte
-
-	b, err := json.MarshalIndent(cfg, "", "  ")
-	if err != nil {
-		log.Fatal(err.Error())
+func (cfg *Config) Print(f string) {
+	switch strings.ToLower(f) {
+	case "json":
+		b, err := json.MarshalIndent(cfg, "", "  ")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		fmt.Println(string(b))
+	case "yaml":
+		b, err := yaml.Marshal(cfg)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		fmt.Println(string(b))
+	case "toml":
+		b := new(bytes.Buffer)
+		if err := toml.NewEncoder(b).Encode(cfg); err != nil {
+			log.Fatal(err.Error())
+		}
+		fmt.Println(b.String())
+	default:
+		log.Fatal("unsupported data format")
 	}
-
-	fmt.Println(string(b))
 }

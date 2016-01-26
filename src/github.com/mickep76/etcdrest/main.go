@@ -38,7 +38,7 @@ func main() {
 		cli.StringFlag{Name: "api-version, V", Value: cfg.APIVersion, EnvVar: "ETCDREST_API_VERSION", Usage: "API Version"},
 		cli.BoolFlag{Name: "envelope", Usage: "Enable default data envelope in a response"},
 		cli.BoolFlag{Name: "no-indent", Usage: "Disable default indent in a response"},
-		cli.BoolFlag{Name: "print-config", Usage: "Print config"},
+		cli.StringFlag{Name: "print-config", Value: "json", Usage: "Print config using either format json, yaml or toml"},
 	}
 	app.Action = func(c *cli.Context) {
 		runServer(c, cfg)
@@ -56,8 +56,8 @@ func runServer(c *cli.Context, cfg *config.Config) {
 	cfg.Load(c)
 
 	// Print configuration.
-	if c.GlobalBool("print-config") {
-		cfg.Print()
+	if c.GlobalString("print-config") != "" {
+		cfg.Print(c.GlobalString("print-config"))
 		os.Exit(0)
 	}
 
