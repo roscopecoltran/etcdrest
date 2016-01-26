@@ -2,60 +2,63 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/user"
 	"time"
 
 	"github.com/codegangsta/cli"
-	"github.com/mickep76/iodatafmt"
 
 	"github.com/mickep76/etcdrest/log"
 )
 
 // Config struct.
 type Config struct {
-	Bind       string   `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
-	BaseURI    string   `json:"baseURI,omitempty" yaml:"baseURI,omitempty" toml:"baseURI,omitempty"`
-	APIVersion string   `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty" toml:"apiVersion,omitempty"`
-	Envelope   bool     `json:"envelope" yaml:"evelope" toml:"envelope"`
-	Etcd       *Etcd    `json:"etcd,omitempty" yaml:"etcd,omitempty" toml:"etcd,omitempty"`
-	Routes     *[]Route `json:"routes,omitempty" yaml:"routes,omitempty" toml:"routes,omitempty"`
+	Bind       string  `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
+	APIVersion string  `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty" toml:"apiVersion,omitempty"`
+	Envelope   bool    `json:"envelope" yaml:"evelope" toml:"envelope"`
+	Indent     bool    `json:"indent" yaml:"indent" toml:"indent"`
+	Etcd       Etcd    `json:"etcd,omitempty" yaml:"etcd,omitempty" toml:"etcd,omitempty"`
+	Routes     []Route `json:"routes,omitempty" yaml:"routes,omitempty" toml:"routes,omitempty"`
 }
 
 // Etcd struct.
 type Etcd struct {
-	Peers          string        `json:"peers,omitempty" yaml:"peers,omitempty" toml:"peers,omitempty"`
-	Cert           string        `json:"cert,omitempty" yaml:"cert,omitempty" toml:"cert,omitempty"`
-	Key            string        `json:"key,omitempty" yaml:"key,omitempty" toml:"key,omitempty"`
-	CA             string        `json:"ca,omitempty" yaml:"ca,omitempty" toml:"peers,omitempty"`
-	User           string        `json:"user,omitempty" yaml:"user,omitempty" toml:"user,omitempty"`
-	Timeout        time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty" toml:"timeout,omitempty"`
-	CommandTimeout time.Duration `json:"commandTimeout,omitempty" yaml:"commandTimeout,omitempty" toml:"commandTimeout,omitempty"`
+	Peers      string        `json:"peers,omitempty" yaml:"peers,omitempty" toml:"peers,omitempty"`
+	Cert       string        `json:"cert,omitempty" yaml:"cert,omitempty" toml:"cert,omitempty"`
+	Key        string        `json:"key,omitempty" yaml:"key,omitempty" toml:"key,omitempty"`
+	CA         string        `json:"ca,omitempty" yaml:"ca,omitempty" toml:"peers,omitempty"`
+	User       string        `json:"user,omitempty" yaml:"user,omitempty" toml:"user,omitempty"`
+	Timeout    time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty" toml:"timeout,omitempty"`
+	CmdTimeout time.Duration `json:"commandTimeout,omitempty" yaml:"commandTimeout,omitempty" toml:"commandTimeout,omitempty"`
 }
 
 // Route struct.
 type Route struct {
-	Endpoint string `json:"endpoint"`
-	Type     string `json:"type"`
-	Template string `json:"template"`
-	Path     string `json:"path"`
-	Schema   string `json:"schema"`
+	Endpoint string `json:"endpoint,omitempty"`
+	Type     string `json:"type,omitempty"`
+	Template string `json:"template,omitempty"`
+	Path     string `json:"path,omitempty"`
+	Schema   string `json:"schema,omitempty"`
 }
 
 func New() *Config {
-	cfg := &Config{
+	cfg := Config{
 		Bind:       "0.0.0.0:8080",
 		APIVersion: "v1",
 		Envelope:   false,
+		Indent:     true,
 	}
 
-	cfg.Etcd = &Etcd{
-		Peers: "http://127.0.0.1:4001,http://127.0.0.1:2379",
+	cfg.Etcd = Etcd{
+		Peers:      "http://127.0.0.1:4001,http://127.0.0.1:2379",
+		Timeout:    time.Second,
+		CmdTimeout: 5 * time.Second,
 	}
 
-	cfg.Routes = &[]Route{}
+	cfg.Routes = []Route{}
 
-	return cfg
+	return &cfg
 }
 
 func (cfg *Config) Load(c *cli.Context) {
@@ -68,11 +71,11 @@ func (cfg *Config) Load(c *cli.Context) {
 	u, _ := user.Current()
 	cfgs := []string{
 		"/etc/etcdrest.json",
-		"/etc/etcdrest.yaml",
-		"/etc/etcdrest.toml",
+		//		"/etc/etcdrest.yaml",
+		//		"/etc/etcdrest.toml",
 		u.HomeDir + "/.etcdrest.json",
-		u.HomeDir + "/.etcdrest.yaml",
-		u.HomeDir + "/.etcdrest.toml",
+		//		u.HomeDir + "/.etcdrest.yaml",
+		//		u.HomeDir + "/.etcdrest.toml",
 	}
 
 	// Check if we have an arg. for config file and that it exist's.
@@ -83,35 +86,45 @@ func (cfg *Config) Load(c *cli.Context) {
 		cfgs = append([]string{c.GlobalString("config")}, cfgs...)
 	}
 
-	/*
-		// Check if config file exists and load it.
-		for _, fn := range cfgs {
-			if _, err := os.Stat(fn); os.IsNotExist(err) {
-				continue
-			}
-			log.Infof("Using config file: %s", fn)
-			f, err := iodatafmt.FileFormat(fn)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-			if err := iodatafmt.LoadPtr(c, fn, f); err != nil {
-				log.Fatal(err.Error())
-			}
-	*/
+	for _, fn := range cfgs {
+		if _, err := os.Stat(fn); os.IsNotExist(err) {
+			continue
+		}
+		log.Infof("Using config file: %s", fn)
 
-	f, err := os.Open(c.GlobalString("config"))
-	//	b, err := ioutil.ReadFile(c.GlobalString("config"))
-	if err != nil {
-		log.Fatal(err.Error())
+		// Load config file.
+		f, err := os.Open(c.GlobalString("config"))
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		// Validate config using JSON schema.
+
+		// Decode JSON into struct.
+		if err := json.NewDecoder(f).Decode(cfg); err != nil {
+			log.Fatal(err.Error())
+		}
+		break
 	}
 
-	// Decode JSON into struct
-	err2 := json.NewDecoder(f).Decode(cfg)
-	if err2 != nil {
-		log.Fatal(err2.Error())
+	// Override configuration.
+	if c.GlobalString("bind") != "" {
+		cfg.Bind = c.GlobalString("bind")
 	}
 
-	// Override configuration with arguments
+	if c.GlobalString("api-version") != "" {
+		cfg.APIVersion = c.GlobalString("api-version")
+	}
+
+	if c.GlobalBool("envelope") {
+		cfg.Envelope = true
+	}
+
+	if c.GlobalBool("no-indent") {
+		cfg.Indent = true
+	}
+
+	// Override etcd configuration.
 	if c.GlobalString("peers") != "" {
 		cfg.Etcd.Peers = c.GlobalString("peers")
 	}
@@ -137,15 +150,17 @@ func (cfg *Config) Load(c *cli.Context) {
 	}
 
 	if c.GlobalDuration("command-timeout") != 0 {
-		cfg.Etcd.CommandTimeout = c.GlobalDuration("command-timeout")
+		cfg.Etcd.CmdTimeout = c.GlobalDuration("command-timeout")
 	}
 }
 
-func (cfg *Config) Print(c *cli.Context) {
-	f, err := iodatafmt.Format(c.String("format"))
+func (cfg *Config) Print() {
+	var b []byte
+
+	b, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	iodatafmt.Print(cfg, f)
+	fmt.Println(string(b))
 }

@@ -1,9 +1,15 @@
 {
   "routes": [
     {
-      "path": "/hosts",
       "endpoint": "/hosts",
+      "type": "api",
+      "path": "/hosts",
       "schema": "file://schemas/hosts.json"
+    },
+    {
+      "endpoint": "/hosts-tmpl",
+      "type": "template",
+      "template": "host"
     }
   ]
 }

@@ -1,18 +1,25 @@
 package main
 
+// Args by reference will change struct directly go-flags
+// Use class struct directly req. to export it
+// Default -> File -> Env -> Arg
+// Validate config file with JSON schema
+
 import (
 	"os"
-	"time"
 
 	"github.com/bgentry/speakeasy"
 	"github.com/codegangsta/cli"
 
+	"github.com/mickep76/etcdrest/config"
 	"github.com/mickep76/etcdrest/etcd"
 	"github.com/mickep76/etcdrest/log"
 	"github.com/mickep76/etcdrest/server"
 )
 
 func main() {
+	cfg := config.New()
+
 	app := cli.NewApp()
 	app.Name = "etcdrest"
 	app.Version = Version
@@ -20,41 +27,52 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "debug, d", Usage: "Debug"},
 		cli.StringFlag{Name: "config, c", EnvVar: "ETCDREST_CONFIG", Usage: "Configuration file (/etc/etcdrest.json|yaml|toml or $HOME/.etcdrest.json|yaml|toml)"},
-		cli.StringFlag{Name: "peers, p", Value: "http://127.0.0.1:4001,http://127.0.0.1:2379", EnvVar: "ETCDREST_PEERS", Usage: "Comma-delimited list of hosts in the cluster"},
+		cli.StringFlag{Name: "peers, p", Value: cfg.Etcd.Peers, EnvVar: "ETCDREST_PEERS", Usage: "Comma-delimited list of hosts in the cluster"},
 		cli.StringFlag{Name: "cert", Value: "", EnvVar: "ETCDREST_CERT", Usage: "Identify HTTPS client using this SSL certificate file"},
 		cli.StringFlag{Name: "key", Value: "", EnvVar: "ETCDREST_KEY", Usage: "Identify HTTPS client using this SSL key file"},
 		cli.StringFlag{Name: "ca", Value: "", EnvVar: "ETCDREST_CA", Usage: "Verify certificates of HTTPS-enabled servers using this CA bundle"},
 		cli.StringFlag{Name: "user, u", Value: "", EnvVar: "ETCDREST_USER", Usage: "Username"},
-		cli.DurationFlag{Name: "timeout, t", Value: time.Second, Usage: "Connection timeout"},
-		cli.DurationFlag{Name: "command-timeout, T", Value: 5 * time.Second, Usage: "Command timeout"},
-		cli.StringFlag{Name: "bind, b", Value: "0.0.0.0:8080", EnvVar: "ETCDREST_BIND", Usage: "Bind address"},
-		cli.StringFlag{Name: "api-version, V", Value: "v1", EnvVar: "ETCDREST_API_VERSION", Usage: "API Version"},
-		cli.StringFlag{Name: "print-config, P", Usage: "Print config"},
+		cli.DurationFlag{Name: "timeout, t", Value: cfg.Etcd.Timeout, Usage: "Connection timeout"},
+		cli.DurationFlag{Name: "command-timeout, T", Value: cfg.Etcd.CmdTimeout, Usage: "Command timeout"},
+		cli.StringFlag{Name: "bind, b", Value: cfg.Bind, EnvVar: "ETCDREST_BIND", Usage: "Bind address"},
+		cli.StringFlag{Name: "api-version, V", Value: cfg.APIVersion, EnvVar: "ETCDREST_API_VERSION", Usage: "API Version"},
+		cli.BoolFlag{Name: "envelope", Usage: "Enable default data envelope in a response"},
+		cli.BoolFlag{Name: "no-indent", Usage: "Disable default indent in a response"},
+		cli.BoolFlag{Name: "print-config", Usage: "Print config"},
 	}
 	app.Action = func(c *cli.Context) {
-		runServer(c)
+		runServer(c, cfg)
 	}
 
 	app.Run(os.Args)
 }
 
-func runServer(c *cli.Context) {
+func runServer(c *cli.Context, cfg *config.Config) {
+	// Set debug.
 	if c.GlobalBool("debug") {
 		log.SetDebug()
 	}
 
+	cfg.Load(c)
+
+	// Print configuration.
+	if c.GlobalBool("print-config") {
+		cfg.Print()
+		os.Exit(0)
+	}
+
 	// Create etcd config.
 	ec := etcd.New()
-	ec.Peers(c.GlobalString("peers"))
-	ec.Cert(c.GlobalString("cert"))
-	ec.Key(c.GlobalString("key"))
-	ec.CA(c.GlobalString("ca"))
-	ec.Timeout(c.GlobalDuration("timeout"))
-	ec.CmdTimeout(c.GlobalDuration("command-timeout"))
+	ec.Peers(cfg.Etcd.Peers)
+	ec.Cert(cfg.Etcd.Cert)
+	ec.Key(cfg.Etcd.Key)
+	ec.CA(cfg.Etcd.CA)
+	ec.Timeout(cfg.Etcd.Timeout)
+	ec.CmdTimeout(cfg.Etcd.CmdTimeout)
 
 	// If user is set ask for password.
-	if c.GlobalString("user") != "" {
-		ec.User(c.GlobalString("user"))
+	if cfg.Etcd.User != "" {
+		ec.User(cfg.Etcd.User)
 		pass, err := speakeasy.Ask("Password: ")
 		if err != nil {
 			log.Fatal(err.Error())
@@ -70,13 +88,26 @@ func runServer(c *cli.Context) {
 
 	// Create server config.
 	sc := server.New(es)
-	sc.Bind(c.GlobalString("bind"))
-	sc.APIVersion(c.GlobalString("api-version"))
-	sc.Envelope(c.GlobalBool("envelope"))
-	//  sc.Indent(c.GlobalBool("indent"))
+	sc.Bind(cfg.Bind)
+	sc.APIVersion(cfg.APIVersion)
+	sc.Envelope(cfg.Envelope)
+	sc.Indent(cfg.Indent)
 
-	sc.RouteEtcd("/api/hosts", "/hosts", "file://schemas/host.json")
-	sc.RouteTemplate("/hosts/{name}", "host")
+	for _, route := range cfg.Routes {
+		switch route.Type {
+		case "api":
+			sc.RouteEtcd(route.Endpoint, route.Path, route.Schema)
+		case "template":
+			sc.RouteTemplate(route.Endpoint, route.Template)
+		default:
+			log.Fatalf("Unknown type: %s for endpoint: %s", route.Type, route.Endpoint)
+		}
+	}
+
+	// Check routes.
+	if len(cfg.Routes) < 1 {
+		log.Fatal("No routes specified.")
+	}
 
 	// Start server.
 	if err := sc.Run(); err != nil {

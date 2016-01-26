@@ -10,6 +10,8 @@ import (
 	"github.com/coreos/etcd/pkg/transport"
 	"github.com/mickep76/etcdmap"
 	"golang.org/x/net/context"
+
+	"github.com/mickep76/etcdrest/log"
 )
 
 // Config interface.
@@ -123,6 +125,7 @@ func (c *config) newClient() (client.Client, error) {
 }
 
 func (c *config) Connect() (Session, error) {
+	log.Infof("Connect to etcd peers: %s", c.peers)
 	cl, err := c.newClient()
 	if err != nil {
 		return nil, err
