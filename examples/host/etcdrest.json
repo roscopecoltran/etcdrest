@@ -7,7 +7,7 @@
       "schema": "file://schemas/host.json"
     },
     {
-      "endpoint": "/hosts-tmpl",
+      "endpoint": "/templ/{name}",
       "type": "template",
       "template": "host"
     }

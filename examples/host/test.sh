@@ -51,16 +51,20 @@ url="${URL}/${APIVERS}/hosts"
 cpt "Get hosts" "GET" "${url}"
 curl -s -i -H "Content-Type: application/json" "${url}"
 
-url="${URL}/${APIVERS}/hosts/test1.example.com"
-cpt "Delete host 1" "DELETE" "${url}"
-curl -s -i -H "Content-Type: application/json" -X DELETE "${url}"
+#url="${URL}/${APIVERS}/hosts/test1.example.com"
+#cpt "Delete host 1" "DELETE" "${url}"
+#curl -s -i -H "Content-Type: application/json" -X DELETE "${url}"
 
-url="${URL}/${APIVERS}/hosts/test2.example.com"
-cpt "Delete host 2" "DELETE" "${url}"
-curl -s -i -H "Content-Type: application/json" -X DELETE "${url}"
+#url="${URL}/${APIVERS}/hosts/test2.example.com"
+#cpt "Delete host 2" "DELETE" "${url}"
+#curl -s -i -H "Content-Type: application/json" -X DELETE "${url}"
 
-url="${URL}/${APIVERS}/hosts"
-cpt "Get hosts" "DELETE" "${url}"
-curl -s -i -H "Content-Type: application/json" "${url}"
+#url="${URL}/${APIVERS}/hosts"
+#cpt "Get hosts" "DELETE" "${url}"
+#curl -s -i -H "Content-Type: application/json" "${url}"
+
+url="${URL}/${APIVERS}/templ/test1.example.com"
+cpt "Get host 1 template" "GET" "${url}"
+curl -s -i "${url}"
 
 echo
