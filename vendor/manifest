@@ -2,12 +2,6 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "github.com/BurntSushi/toml",
-			"repository": "https://github.com/BurntSushi/toml",
-			"revision": "5c4df71dfe9ac89ef6287afc05e4c1b16ae65a1e",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/bgentry/speakeasy",
 			"repository": "https://github.com/bgentry/speakeasy",
 			"revision": "36e9cfdd690967f4f690c6edcc9ffacd006014a0",
@@ -22,42 +16,42 @@
 		{
 			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/github.com/ugorji/go/codec",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
+			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
 			"branch": "master",
 			"path": "/Godeps/_workspace/src/github.com/ugorji/go/codec"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
+			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
 			"branch": "master",
 			"path": "/Godeps/_workspace/src/golang.org/x/net/context"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/client",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
+			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
 			"branch": "master",
 			"path": "/client"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/pathutil",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
+			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
 			"branch": "master",
 			"path": "/pkg/pathutil"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/transport",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
+			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
 			"branch": "master",
 			"path": "/pkg/transport"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/types",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "59c6735c3cdb172555f47c073fc9e5b512a12b56",
+			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
 			"branch": "master",
 			"path": "/pkg/types"
 		},
@@ -76,7 +70,7 @@
 		{
 			"importpath": "github.com/gorilla/handlers",
 			"repository": "https://github.com/gorilla/handlers",
-			"revision": "8f2758070a82adb7a3ad6b223a0b91878f32d400",
+			"revision": "44328eee346b9614b3fe8ca84e72fe23736afbfb",
 			"branch": "master"
 		},
 		{
@@ -95,18 +89,6 @@
 			"importpath": "github.com/mickep76/etcdmap",
 			"repository": "https://github.com/mickep76/etcdmap",
 			"revision": "7128b59ea24bc4ad44b1eb0e1c9998459c01fc80",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/mickep76/iodatafmt",
-			"repository": "https://github.com/mickep76/iodatafmt",
-			"revision": "b597e16ba86d5b61a9fc26e0d7cfa92682009e1d",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/naoina/go-stringutil",
-			"repository": "https://github.com/naoina/go-stringutil",
-			"revision": "6b638e95a32d0c1131db0e7fe83775cbea4a0d0b",
 			"branch": "master"
 		},
 		{
@@ -130,7 +112,7 @@
 		{
 			"importpath": "golang.org/x/net/context",
 			"repository": "https://go.googlesource.com/net",
-			"revision": "f315505cf3349909cdf013ea56690da34e96a451",
+			"revision": "04b9de9b512f58addf28c9853d50ebef61c3953e",
 			"branch": "master",
 			"path": "/context"
 		},
