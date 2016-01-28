@@ -1,10 +1,5 @@
-bind = "0.0.0.0:8080"
-apiVersion = "v1"
-envelope = false
-indent = true
-
 [etcd]
-  peers = "http://192.168.99.100:4001"
+  peers = "http://etcd:4001"
 
 [[routes]]
   Endpoint = "/hosts"

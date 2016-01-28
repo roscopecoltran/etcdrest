@@ -1,10 +1,11 @@
 FROM gliderlabs/alpine
 
-COPY bin/etcdrest /etcdrest
+RUN mkdir -p /app/bin /app/etc /app/schemas /app/templates /app/logs
 
-RUN mkdir /schemas /templates
+COPY bin/etcdrest /app/bin/etcdrest
 
-COPY templates/print.tmpl /templates/print.tmpl
+COPY templates/print.tmpl /app/templates/print.tmpl
 
 EXPOSE 8080
-ENTRYPOINT ["/etcdrest"]
+#WORKDIR "/app"
+ENTRYPOINT ["cd /app; ./bin/etcdrest"]

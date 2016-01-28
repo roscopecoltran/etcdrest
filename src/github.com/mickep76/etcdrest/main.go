@@ -1,10 +1,5 @@
 package main
 
-// Args by reference will change struct directly go-flags
-// Use class struct directly req. to export it
-// Default -> File -> Env -> Arg
-// Validate config file with JSON schema
-
 import (
 	"os"
 
@@ -27,6 +22,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "debug, d", Usage: "Debug"},
 		cli.StringFlag{Name: "config, c", EnvVar: "ETCDREST_CONFIG", Usage: "Configuration file (/etc/etcdrest.json|yaml|toml or $HOME/.etcdrest.json|yaml|toml)"},
+		cli.StringFlag{Name: "app-dir, a", Value: "/app", EnvVar: "ETCDREST_APP_DIR", Usage: "Aplication directory"},
 		cli.StringFlag{Name: "peers, p", Value: cfg.Etcd.Peers, EnvVar: "ETCDREST_PEERS", Usage: "Comma-delimited list of hosts in the cluster"},
 		cli.StringFlag{Name: "cert", Value: "", EnvVar: "ETCDREST_CERT", Usage: "Identify HTTPS client using this SSL certificate file"},
 		cli.StringFlag{Name: "key", Value: "", EnvVar: "ETCDREST_KEY", Usage: "Identify HTTPS client using this SSL key file"},

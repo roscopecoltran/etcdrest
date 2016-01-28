@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	//"github.com/BurntSushi/toml"
 	"github.com/codegangsta/cli"
 	"github.com/kezhuw/toml"
 	"gopkg.in/yaml.v2"
@@ -19,10 +18,9 @@ import (
 	"github.com/mickep76/etcdrest/log"
 )
 
-//var schema = ``
-
 // Config struct.
 type Config struct {
+	BaseDir    string  `json:"baseDir" yaml:"baseDir" toml:"baseDir"`
 	Bind       string  `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
 	APIVersion string  `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty" toml:"apiVersion,omitempty"`
 	Envelope   bool    `json:"envelope" yaml:"evelope" toml:"envelope"`
@@ -79,12 +77,21 @@ func (cfg *Config) Load(c *cli.Context) {
 	// Default path for config file.
 	u, _ := user.Current()
 	cfgs := []string{
-		"/etc/etcdrest.json",
-		"/etc/etcdrest.yaml",
-		"/etc/etcdrest.toml",
 		u.HomeDir + "/.etcdrest.json",
 		u.HomeDir + "/.etcdrest.yaml",
+		u.HomeDir + "/.etcdrest.yml",
 		u.HomeDir + "/.etcdrest.toml",
+		u.HomeDir + "/.etcdrest.tml",
+		cfg.AppDir + "/etc/etcdrest.json",
+		cfg.AppDir + "/etc/etcdrest.yaml",
+		cfg.AppDir + "/etc/etcdrest.yml",
+		cfg.AppDir + "/etc/etcdrest.toml",
+		cfg.AppDir + "/etc/etcdrest.tml",
+		"/etc/etcdrest.json",
+		"/etc/etcdrest.yaml",
+		"/etc/etcdrest.yml",
+		"/etc/etcdrest.toml",
+		"/etc/etcdrest.tml",
 	}
 
 	// Check if we have an arg. for config file and that it exist's.
@@ -109,15 +116,15 @@ func (cfg *Config) Load(c *cli.Context) {
 		}
 
 		switch filepath.Ext(fn) {
-		case ".yaml":
-			if err := yaml.Unmarshal(b, cfg); err != nil {
-				log.Fatal(err.Error())
-			}
 		case ".json":
 			if err := json.Unmarshal(b, cfg); err != nil {
 				log.Fatal(err.Error())
 			}
-		case ".toml":
+		case ".yaml", ".yml":
+			if err := yaml.Unmarshal(b, cfg); err != nil {
+				log.Fatal(err.Error())
+			}
+		case ".toml", ".tml":
 			if err := toml.Unmarshal(b, cfg); err != nil {
 				log.Fatal(err.Error())
 			}
