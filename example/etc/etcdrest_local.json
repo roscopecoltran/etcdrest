@@ -1,6 +1,6 @@
 {
-  "templDir": "/app/templates",
-  "schemaURI": "file:///app/schemas",
+  "templDir": "templates",
+  "schemaURI": "file://schemas",
   "routes": [
     {
       "endpoint": "/hosts",

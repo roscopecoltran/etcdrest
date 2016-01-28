@@ -103,7 +103,8 @@ func (c *config) patchDoc(doc, patch []byte) ([]byte, error) {
 func (c *config) validateDoc(doc []byte, path string, schema string) (int, []error) {
 	// Prepare document and JSON schema.
 	docLoader := gojsonschema.NewStringLoader(string(doc))
-	schemaLoader := gojsonschema.NewReferenceLoader(schema)
+	log.Infof("Using schema URI: %s/%s", c.schemaURI, schema)
+	schemaLoader := gojsonschema.NewReferenceLoader(c.schemaURI + "/" + schema)
 
 	// Validate document using JSON schema.
 	res, err := gojsonschema.Validate(schemaLoader, docLoader)

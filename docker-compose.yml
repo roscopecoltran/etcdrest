@@ -1,17 +1,24 @@
-#cfg:
-#  image: mickep76/etcdrest-example:latest
-#  command: tail -f /dev/null
-#  volumes:
-#  - /app/schemas
-#  - /app/templates
-#  - /app/etc
+cfg:
+  image: mickep76/etcdrest-example:latest
+  command: tail -f /dev/null
+  volumes:
+  - /app/schemas
+  - /app/templates
+  - /app/etc
 api:
   image: mickep76/etcdrest:latest
+  command: --debug
   ports:
   - 8080:8080
-#  links:
-#  - db:ETCD
-#  volumes_from:
-#  - cfg
-#db:
-#  image: quay.io/coreos/etcd:latest
+  links:
+  - etcd
+  volumes_from:
+  - cfg
+etcd:
+  image: quay.io/coreos/etcd:latest
+  ports:
+  - 2379:2379
+  command: >
+    -advertise-client-urls=http://0.0.0.0:2379
+    -listen-client-urls=http://0.0.0.0:2379
+    -advertise-client-urls http://etcd:2379
