@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"strings"
 
 	"github.com/bgentry/speakeasy"
 	"github.com/codegangsta/cli"
@@ -16,10 +15,6 @@ import (
 func main() {
 	cfg := config.New()
 
-	// Workaround for docker since the Client package doesn't resolve /etc/hosts
-	etcdPort := os.Getenv("ETCD_PORT")
-	peers := strings.Replace(etcdPort, "tcp://", "http://", 1)
-
 	app := cli.NewApp()
 	app.Name = "etcdrest"
 	app.Version = Version
@@ -29,7 +24,7 @@ func main() {
 		cli.StringFlag{Name: "config, c", EnvVar: "ETCDREST_CONFIG", Usage: "Configuration file (/etc/etcdrest.json|yaml|toml or $HOME/.etcdrest.json|yaml|toml)"},
 		cli.StringFlag{Name: "templ-dir", EnvVar: "ETCDREST_TEMPL_DIR", Usage: "Template directory"},
 		cli.StringFlag{Name: "schema-uri", EnvVar: "ETCDREST_SCHEMA_URI", Usage: "Schema directory"},
-		cli.StringFlag{Name: "peers, p", Value: peers, EnvVar: "ETCDREST_PEERS", Usage: "Comma-delimited list of hosts in the cluster"},
+		cli.StringFlag{Name: "peers, p", EnvVar: "ETCDREST_PEERS", Usage: "Comma-delimited list of hosts in the cluster"},
 		cli.StringFlag{Name: "cert", EnvVar: "ETCDREST_CERT", Usage: "Identify HTTPS client using this SSL certificate file"},
 		cli.StringFlag{Name: "key", EnvVar: "ETCDREST_KEY", Usage: "Identify HTTPS client using this SSL key file"},
 		cli.StringFlag{Name: "ca", EnvVar: "ETCDREST_CA", Usage: "Verify certificates of HTTPS-enabled servers using this CA bundle"},
