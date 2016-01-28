@@ -20,7 +20,8 @@ import (
 
 // Config struct.
 type Config struct {
-	BaseDir    string  `json:"baseDir" yaml:"baseDir" toml:"baseDir"`
+	TemplDir   string  `json:"templDir" yaml:"templDir" toml:"templDir"`
+	SchemaURI  string  `json:"schemaURI" yaml:"schemaURI" toml:"schemaURI"`
 	Bind       string  `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
 	APIVersion string  `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty" toml:"apiVersion,omitempty"`
 	Envelope   bool    `json:"envelope" yaml:"evelope" toml:"envelope"`
@@ -51,6 +52,8 @@ type Route struct {
 
 func New() *Config {
 	cfg := Config{
+		TemplDir:   "templates",
+		SchemaURI:  "file://schemas",
 		Bind:       "0.0.0.0:8080",
 		APIVersion: "v1",
 		Envelope:   false,
@@ -82,16 +85,16 @@ func (cfg *Config) Load(c *cli.Context) {
 		u.HomeDir + "/.etcdrest.yml",
 		u.HomeDir + "/.etcdrest.toml",
 		u.HomeDir + "/.etcdrest.tml",
-		cfg.AppDir + "/etc/etcdrest.json",
-		cfg.AppDir + "/etc/etcdrest.yaml",
-		cfg.AppDir + "/etc/etcdrest.yml",
-		cfg.AppDir + "/etc/etcdrest.toml",
-		cfg.AppDir + "/etc/etcdrest.tml",
 		"/etc/etcdrest.json",
 		"/etc/etcdrest.yaml",
 		"/etc/etcdrest.yml",
 		"/etc/etcdrest.toml",
 		"/etc/etcdrest.tml",
+		"/app/etc/etcdrest.json",
+		"/app/etc/etcdrest.yaml",
+		"/app/etc/etcdrest.yml",
+		"/app/etc/etcdrest.toml",
+		"/app/etc/etcdrest.tml",
 	}
 
 	// Check if we have an arg. for config file and that it exist's.
@@ -138,6 +141,14 @@ func (cfg *Config) Load(c *cli.Context) {
 	}
 
 	// Override configuration.
+	if c.GlobalString("templ-dir") != "" {
+		cfg.TemplDir = c.GlobalString("templ-dir")
+	}
+
+	if c.GlobalString("schema-uri") != "" {
+		cfg.SchemaURI = c.GlobalString("schema-uri")
+	}
+
 	if c.GlobalString("bind") != "" {
 		cfg.Bind = c.GlobalString("bind")
 	}

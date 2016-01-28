@@ -2,6 +2,6 @@ FROM gliderlabs/alpine
 
 RUN mkdir -p /app/etc
 
-COPY etc/etcdrest.tml /app/etc/etcdrest.tml
+COPY etc/etcdrest.json /app/etc/etcdrest.json
 COPY schemas /app/schemas
 COPY templates /app/templates

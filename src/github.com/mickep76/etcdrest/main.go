@@ -22,16 +22,17 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "debug, d", Usage: "Debug"},
 		cli.StringFlag{Name: "config, c", EnvVar: "ETCDREST_CONFIG", Usage: "Configuration file (/etc/etcdrest.json|yaml|toml or $HOME/.etcdrest.json|yaml|toml)"},
-		cli.StringFlag{Name: "app-dir, a", Value: "/app", EnvVar: "ETCDREST_APP_DIR", Usage: "Aplication directory"},
-		cli.StringFlag{Name: "peers, p", Value: cfg.Etcd.Peers, EnvVar: "ETCDREST_PEERS", Usage: "Comma-delimited list of hosts in the cluster"},
-		cli.StringFlag{Name: "cert", Value: "", EnvVar: "ETCDREST_CERT", Usage: "Identify HTTPS client using this SSL certificate file"},
-		cli.StringFlag{Name: "key", Value: "", EnvVar: "ETCDREST_KEY", Usage: "Identify HTTPS client using this SSL key file"},
-		cli.StringFlag{Name: "ca", Value: "", EnvVar: "ETCDREST_CA", Usage: "Verify certificates of HTTPS-enabled servers using this CA bundle"},
-		cli.StringFlag{Name: "user, u", Value: "", EnvVar: "ETCDREST_USER", Usage: "Username"},
-		cli.DurationFlag{Name: "timeout, t", Value: cfg.Etcd.Timeout, Usage: "Connection timeout"},
-		cli.DurationFlag{Name: "command-timeout, T", Value: cfg.Etcd.CmdTimeout, Usage: "Command timeout"},
-		cli.StringFlag{Name: "bind, b", Value: cfg.Bind, EnvVar: "ETCDREST_BIND", Usage: "Bind address"},
-		cli.StringFlag{Name: "api-version, V", Value: cfg.APIVersion, EnvVar: "ETCDREST_API_VERSION", Usage: "API Version"},
+		cli.StringFlag{Name: "templ-dir", EnvVar: "ETCDREST_TEMPL_DIR", Usage: "Template directory"},
+		cli.StringFlag{Name: "schema-uri", EnvVar: "ETCDREST_SCHEMA_URI", Usage: "Schema directory"},
+		cli.StringFlag{Name: "peers, p", EnvVar: "ETCDREST_PEERS", Usage: "Comma-delimited list of hosts in the cluster"},
+		cli.StringFlag{Name: "cert", EnvVar: "ETCDREST_CERT", Usage: "Identify HTTPS client using this SSL certificate file"},
+		cli.StringFlag{Name: "key", EnvVar: "ETCDREST_KEY", Usage: "Identify HTTPS client using this SSL key file"},
+		cli.StringFlag{Name: "ca", EnvVar: "ETCDREST_CA", Usage: "Verify certificates of HTTPS-enabled servers using this CA bundle"},
+		cli.StringFlag{Name: "user, u", EnvVar: "ETCDREST_USER", Usage: "Username"},
+		cli.DurationFlag{Name: "timeout, t", Usage: "Connection timeout"},
+		cli.DurationFlag{Name: "command-timeout, T", Usage: "Command timeout"},
+		cli.StringFlag{Name: "bind, b", EnvVar: "ETCDREST_BIND", Usage: "Bind address"},
+		cli.StringFlag{Name: "api-version, V", EnvVar: "ETCDREST_API_VERSION", Usage: "API Version"},
 		cli.BoolFlag{Name: "envelope", Usage: "Enable default data envelope in a response"},
 		cli.BoolFlag{Name: "no-indent", Usage: "Disable default indent in a response"},
 		cli.StringFlag{Name: "print-config", Value: "json", Usage: "Print config using either format json, yaml or toml"},
@@ -52,7 +53,7 @@ func runServer(c *cli.Context, cfg *config.Config) {
 	cfg.Load(c)
 
 	// Print configuration.
-	if c.GlobalString("print-config") != "" {
+	if c.GlobalIsSet("print-config") {
 		cfg.Print(c.GlobalString("print-config"))
 		os.Exit(0)
 	}
@@ -84,6 +85,8 @@ func runServer(c *cli.Context, cfg *config.Config) {
 
 	// Create server config.
 	sc := server.New(es)
+	sc.TemplDir(cfg.TemplDir)
+	sc.SchemaURI(cfg.SchemaURI)
 	sc.Bind(cfg.Bind)
 	sc.APIVersion(cfg.APIVersion)
 	sc.Envelope(cfg.Envelope)

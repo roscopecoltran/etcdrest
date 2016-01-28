@@ -39,10 +39,14 @@ var funcs = template.FuncMap{
 	"get":    get,
 }
 
-var templates = template.Must(template.New("main").Funcs(funcs).ParseGlob("templates/*.tmpl"))
+var templates *template.Template
 
 // RouteTempl add route for Go Text Template.
 func (c *config) RouteTemplate(endpoint, templ string) {
+	if templates == nil {
+		templates = template.Must(template.New("main").Funcs(funcs).ParseGlob(c.templDir + "/*.tmpl"))
+	}
+
 	url := "/" + c.apiVersion + endpoint
 	log.Infof("Add endpoint: %s template: %s", url, templ)
 	c.router.HandleFunc(url, c.getTemplate(templ)).Methods("GET")

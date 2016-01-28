@@ -22,6 +22,8 @@ var session etcd.Session
 
 // Config interface.
 type Config interface {
+	TemplDir(string) Config
+	SchemaURI(string) Config
 	Bind(string) Config
 	APIVersion(string) Config
 	Envelope(bool) Config
@@ -33,6 +35,8 @@ type Config interface {
 
 // config struct.
 type config struct {
+	templDir   string
+	schemaURI  string
 	bind       string
 	apiVersion string
 	envelope   bool
@@ -44,6 +48,8 @@ type config struct {
 // New config constructor.
 func New(session etcd.Session) Config {
 	return &config{
+		templDir:   "templates",
+		schemaURI:  "file://schemas",
 		bind:       "0.0.0.0:8080",
 		apiVersion: "v1",
 		envelope:   false,
@@ -51,6 +57,16 @@ func New(session etcd.Session) Config {
 		session:    session,
 		router:     mux.NewRouter(),
 	}
+}
+
+func (c *config) TemplDir(templDir string) Config {
+	c.templDir = templDir
+	return c
+}
+
+func (c *config) SchemaURI(schemaURI string) Config {
+	c.schemaURI = schemaURI
+	return c
 }
 
 func (c *config) Bind(bind string) Config {
