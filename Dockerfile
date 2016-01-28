@@ -1,6 +1,6 @@
 FROM gliderlabs/alpine
 
-COPY bin/etcd-rest /etcd-rest
+COPY bin/etcdrest /etcdrest
 
-EXPOSE 3000
-CMD ["/etcd-rest"]
+EXPOSE 8080
+ENTRYPOINT ["/etcdrest"]

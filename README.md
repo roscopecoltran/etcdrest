@@ -1,6 +1,27 @@
-# etcd-rest
+# etcdrest
 
 Create REST API in Go using etcd as a backend with JSON schema for validation.
+
+# Build
+
+```bash
+git clone https://github.com/mickep76/etcdrest.git
+cd etcdrest
+make
+```
+
+# Build Docker image
+
+# Example
+
+Make sure you have Docker configured.
+
+**Start etcd:**
+
+```
+./init-etcd.sh start
+eval "$(./init-etcd.sh env)"
+```
 
 # CAVEATS
 
