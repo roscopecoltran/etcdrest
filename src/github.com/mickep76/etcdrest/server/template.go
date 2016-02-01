@@ -47,7 +47,7 @@ func (c *config) RouteTemplate(endpoint, templ string) {
 		templates = template.Must(template.New("main").Funcs(funcs).ParseGlob(c.templDir + "/*.tmpl"))
 	}
 
-	url := "/" + c.apiVersion + endpoint
+	url := endpoint
 	log.Infof("Add endpoint: %s template: %s", url, templ)
 	c.router.HandleFunc(url, c.getTemplate(templ)).Methods("GET")
 }

@@ -88,7 +88,6 @@ func runServer(c *cli.Context, cfg *config.Config) {
 	sc.TemplDir(cfg.TemplDir)
 	sc.SchemaURI(cfg.SchemaURI)
 	sc.Bind(cfg.Bind)
-	sc.APIVersion(cfg.APIVersion)
 	sc.Envelope(cfg.Envelope)
 	sc.Indent(cfg.Indent)
 

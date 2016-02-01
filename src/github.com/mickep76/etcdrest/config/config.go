@@ -20,14 +20,13 @@ import (
 
 // Config struct.
 type Config struct {
-	TemplDir   string  `json:"templDir" yaml:"templDir" toml:"templDir"`
-	SchemaURI  string  `json:"schemaURI" yaml:"schemaURI" toml:"schemaURI"`
-	Bind       string  `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
-	APIVersion string  `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty" toml:"apiVersion,omitempty"`
-	Envelope   bool    `json:"envelope" yaml:"evelope" toml:"envelope"`
-	Indent     bool    `json:"indent" yaml:"indent" toml:"indent"`
-	Etcd       Etcd    `json:"etcd,omitempty" yaml:"etcd,omitempty" toml:"etcd,omitempty"`
-	Routes     []Route `json:"routes,omitempty" yaml:"routes,omitempty" toml:"routes,omitempty"`
+	TemplDir  string  `json:"templDir" yaml:"templDir" toml:"templDir"`
+	SchemaURI string  `json:"schemaURI" yaml:"schemaURI" toml:"schemaURI"`
+	Bind      string  `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
+	Envelope  bool    `json:"envelope" yaml:"evelope" toml:"envelope"`
+	Indent    bool    `json:"indent" yaml:"indent" toml:"indent"`
+	Etcd      Etcd    `json:"etcd,omitempty" yaml:"etcd,omitempty" toml:"etcd,omitempty"`
+	Routes    []Route `json:"routes,omitempty" yaml:"routes,omitempty" toml:"routes,omitempty"`
 }
 
 // Etcd struct.
@@ -52,12 +51,11 @@ type Route struct {
 
 func New() *Config {
 	cfg := Config{
-		TemplDir:   "templates",
-		SchemaURI:  "file://schemas",
-		Bind:       "0.0.0.0:8080",
-		APIVersion: "v1",
-		Envelope:   false,
-		Indent:     true,
+		TemplDir:  "templates",
+		SchemaURI: "file://schemas",
+		Bind:      "0.0.0.0:8080",
+		Envelope:  false,
+		Indent:    true,
 	}
 
 	cfg.Etcd = Etcd{
@@ -151,10 +149,6 @@ func (cfg *Config) Load(c *cli.Context) {
 
 	if c.GlobalString("bind") != "" {
 		cfg.Bind = c.GlobalString("bind")
-	}
-
-	if c.GlobalString("api-version") != "" {
-		cfg.APIVersion = c.GlobalString("api-version")
 	}
 
 	if c.GlobalBool("envelope") {

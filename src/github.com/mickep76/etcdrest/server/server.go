@@ -25,7 +25,6 @@ type Config interface {
 	TemplDir(string) Config
 	SchemaURI(string) Config
 	Bind(string) Config
-	APIVersion(string) Config
 	Envelope(bool) Config
 	Indent(bool) Config
 	RouteEtcd(string, string, string)
@@ -36,27 +35,25 @@ type Config interface {
 
 // config struct.
 type config struct {
-	templDir   string
-	schemaURI  string
-	bind       string
-	apiVersion string
-	envelope   bool
-	indent     bool
-	session    etcd.Session
-	router     *mux.Router
+	templDir  string
+	schemaURI string
+	bind      string
+	envelope  bool
+	indent    bool
+	session   etcd.Session
+	router    *mux.Router
 }
 
 // New config constructor.
 func New(session etcd.Session) Config {
 	return &config{
-		templDir:   "templates",
-		schemaURI:  "file://schemas",
-		bind:       "0.0.0.0:8080",
-		apiVersion: "v1",
-		envelope:   false,
-		indent:     true,
-		session:    session,
-		router:     mux.NewRouter(),
+		templDir:  "templates",
+		schemaURI: "file://schemas",
+		bind:      "0.0.0.0:8080",
+		envelope:  false,
+		indent:    true,
+		session:   session,
+		router:    mux.NewRouter(),
 	}
 }
 
@@ -72,11 +69,6 @@ func (c *config) SchemaURI(schemaURI string) Config {
 
 func (c *config) Bind(bind string) Config {
 	c.bind = bind
-	return c
-}
-
-func (c *config) APIVersion(apiVersion string) Config {
-	c.apiVersion = apiVersion
 	return c
 }
 
@@ -228,7 +220,7 @@ func (c *config) deleteDoc(path string) func(w http.ResponseWriter, r *http.Requ
 
 // RouteEtcd add route for etcd.
 func (c *config) RouteEtcd(endpoint, path, schema string) {
-	url := "/" + c.apiVersion + endpoint
+	url := endpoint
 	log.Infof("Add endpoint: %s etcd path: %s schema: %s", url, path, schema)
 
 	c.router.HandleFunc(url, c.getDoc(path)).Methods("GET")
@@ -240,7 +232,7 @@ func (c *config) RouteEtcd(endpoint, path, schema string) {
 
 // RouteStatic add route for file system path.
 func (c *config) RouteStatic(endpoint, path string) {
-	url := "/" + c.apiVersion + endpoint
+	url := endpoint
 	log.Infof("Add endpoint: %s path: %s", url, path)
 
 	static := http.StripPrefix(url, http.FileServer(http.Dir(path)))

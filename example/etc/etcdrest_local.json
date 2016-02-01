@@ -3,7 +3,7 @@
   "schemaURI": "file://schemas",
   "routes": [
     {
-      "endpoint": "/hosts",
+      "endpoint": "/api/v1/hosts",
       "type": "api",
       "path": "/hosts",
       "schema": "host.json"
