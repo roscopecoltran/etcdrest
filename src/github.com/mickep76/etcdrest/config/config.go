@@ -42,11 +42,15 @@ type Etcd struct {
 
 // Route struct.
 type Route struct {
-	Endpoint string `json:"endpoint,omitempty"`
-	Type     string `json:"type,omitempty"`
-	Template string `json:"template,omitempty"`
-	Path     string `json:"path,omitempty"`
-	Schema   string `json:"schema,omitempty"`
+	Endpoint       string `json:"endpoint,omitempty"`
+	Collection     string `json:"collection,omitempty"`
+	CollectionPath string `json:"collectionPath,omitempty"`
+	Resource       string `json:"resource,omitempty"`
+	ResourcePath   string `json:"resourcePath,omitempty"`
+	Type           string `json:"type,omitempty"`
+	Template       string `json:"template,omitempty"`
+	Path           string `json:"path,omitempty"`
+	Schema         string `json:"schema,omitempty"`
 }
 
 func New() *Config {

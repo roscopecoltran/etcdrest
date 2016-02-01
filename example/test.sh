@@ -36,7 +36,7 @@ curl -s -i -H "Content-Type: application/json" -X PUT -d "$(cat test2.example.co
 
 url="${APIURL}/hosts"
 cpt "Get hosts" "GET" "${url}"
-curl -s -i -H "Content-Type: application/json" "${URL}/hosts"
+curl -s -i -H "Content-Type: application/json" "${url}"
 
 url="${APIURL}/hosts/test1.example.com"
 cpt "Update host 1" "PUT" "${url}"

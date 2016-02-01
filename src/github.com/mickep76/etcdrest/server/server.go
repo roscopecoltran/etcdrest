@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/xeipuuv/gojsonschema"
+	"text/template"
 
 	"github.com/mickep76/etcdrest/etcd"
 	"github.com/mickep76/etcdrest/log"
@@ -27,7 +29,7 @@ type Config interface {
 	Bind(string) Config
 	Envelope(bool) Config
 	Indent(bool) Config
-	RouteEtcd(string, string, string)
+	RouteEtcd(string, string, string, string, string)
 	RouteTemplate(string, string)
 	RouteStatic(string, string)
 	Run() error
@@ -120,7 +122,19 @@ func (c *config) validateDoc(doc []byte, path string, schema string) (int, []err
 // putOrPatchDoc put or patch document.
 func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		npath := path + "/" + mux.Vars(r)["name"]
+		var newPath bytes.Buffer
+
+		t, err := template.New("endpoint").Parse(path)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		err = t.Execute(&newPath, mux.Vars(r))
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		log.Infof("etcd path: %s", newPath.String())
 
 		// Get request body.
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
@@ -136,7 +150,7 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 		// Patch document using JSON patch RFC 6902.
 		var doc []byte
 		if r.Method == "PATCH" {
-			data, code, err := c.session.Get(npath)
+			data, code, err := c.session.Get(newPath.String())
 			if err != nil {
 				c.writeError(w, r, err, code)
 				return
@@ -158,7 +172,7 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 		}
 
 		// Validate document using JSON schema
-		if code, errors := c.validateDoc(doc, npath, schema); errors != nil {
+		if code, errors := c.validateDoc(doc, newPath.String(), schema); errors != nil {
 			c.writeErrors(w, r, errors, code)
 			return
 		}
@@ -170,7 +184,7 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 		}
 
 		// Create document.
-		if code, err := c.session.Put(npath, data); err != nil {
+		if code, err := c.session.Put(newPath.String(), data); err != nil {
 			c.writeError(w, r, err, code)
 			return
 		}
@@ -182,13 +196,21 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 // getDoc get document.
 func (c *config) getDoc(path string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name := mux.Vars(r)["name"]
-		npath := path
-		if name != "" {
-			npath = npath + "/" + name
+		var newPath bytes.Buffer
+
+		t, err := template.New("endpoint").Parse(path)
+		if err != nil {
+			log.Fatal(err.Error())
 		}
 
-		doc, code, err := c.session.Get(npath)
+		err = t.Execute(&newPath, mux.Vars(r))
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		log.Infof("etcd path: %s", newPath.String())
+
+		doc, code, err := c.session.Get(newPath.String())
 		if err != nil {
 			c.writeError(w, r, err, code)
 			return
@@ -201,15 +223,27 @@ func (c *config) getDoc(path string) func(w http.ResponseWriter, r *http.Request
 // deleteDoc delete document.
 func (c *config) deleteDoc(path string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		npath := path + "/" + mux.Vars(r)["name"]
+		var newPath bytes.Buffer
 
-		data, code, err := c.session.Get(npath)
+		t, err := template.New("endpoint").Parse(path)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		err = t.Execute(&newPath, mux.Vars(r))
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		log.Infof("etcd path: %s", newPath.String())
+
+		data, code, err := c.session.Get(newPath.String())
 		if err != nil {
 			c.writeError(w, r, err, code)
 			return
 		}
 
-		if code, err := c.session.Delete(npath); err != nil {
+		if code, err := c.session.Delete(newPath.String()); err != nil {
 			c.writeError(w, r, err, code)
 			return
 		}
@@ -219,15 +253,15 @@ func (c *config) deleteDoc(path string) func(w http.ResponseWriter, r *http.Requ
 }
 
 // RouteEtcd add route for etcd.
-func (c *config) RouteEtcd(endpoint, path, schema string) {
-	url := endpoint
-	log.Infof("Add endpoint: %s etcd path: %s schema: %s", url, path, schema)
+func (c *config) RouteEtcd(collection, collectionPath, resource, resourcePath, schema string) {
+	log.Infof("Add collection: %s collection path: %s", collection, collectionPath)
+	log.Infof("Add resource: %s resource path: %s schema: %s", resource, resourcePath, schema)
 
-	c.router.HandleFunc(url, c.getDoc(path)).Methods("GET")
-	c.router.HandleFunc(url+"/{name}", c.getDoc(path)).Methods("GET")
-	c.router.HandleFunc(url+"/{name}", c.putOrPatchDoc(path, schema)).Methods("PUT")
-	c.router.HandleFunc(url+"/{name}", c.putOrPatchDoc(path, schema)).Methods("PATCH")
-	c.router.HandleFunc(url+"/{name}", c.deleteDoc(path)).Methods("DELETE")
+	c.router.HandleFunc(collection, c.getDoc(collectionPath)).Methods("GET")
+	c.router.HandleFunc(resource, c.getDoc(resourcePath)).Methods("GET")
+	c.router.HandleFunc(resource, c.putOrPatchDoc(resourcePath, schema)).Methods("PUT")
+	c.router.HandleFunc(resource, c.putOrPatchDoc(resourcePath, schema)).Methods("PATCH")
+	c.router.HandleFunc(resource, c.deleteDoc(resourcePath)).Methods("DELETE")
 }
 
 // RouteStatic add route for file system path.

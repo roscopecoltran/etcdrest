@@ -3,10 +3,20 @@
   "schemaURI": "file://schemas",
   "routes": [
     {
-      "endpoint": "/api/v1/hosts",
+      "collection": "/api/v1/hosts",
+      "collectionPath": "/hosts",
+      "resource": "/api/v1/hosts/{host}",
+      "resourcePath": "/hosts/{{.host}}",
       "type": "api",
-      "path": "/hosts",
       "schema": "host.json"
+    },
+    {
+      "collection": "/api/v1/hosts/{host}/interfaces",
+      "collectionPath": "/hosts/{{.host}}/interfaces",
+      "resource": "/api/v1/hosts/{host}/interfaces/{interface}",
+      "resourcePath": "/hosts/{{.host}}/interfaces/{{.interface}}",
+      "type": "api",
+      "schema": "interface.json"
     },
     {
       "endpoint": "/templ/{name}",
