@@ -98,6 +98,8 @@ func runServer(c *cli.Context, cfg *config.Config) {
 			sc.RouteEtcd(route.Endpoint, route.Path, route.Schema)
 		case "template":
 			sc.RouteTemplate(route.Endpoint, route.Template)
+		case "static":
+			sc.RouteStatic(route.Endpoint, route.Path)
 		default:
 			log.Fatalf("Unknown type: %s for endpoint: %s", route.Type, route.Endpoint)
 		}

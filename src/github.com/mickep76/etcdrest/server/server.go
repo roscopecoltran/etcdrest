@@ -30,6 +30,7 @@ type Config interface {
 	Indent(bool) Config
 	RouteEtcd(string, string, string)
 	RouteTemplate(string, string)
+	RouteStatic(string, string)
 	Run() error
 }
 
@@ -225,7 +226,7 @@ func (c *config) deleteDoc(path string) func(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// EtcdRoute add route for etcd.
+// RouteEtcd add route for etcd.
 func (c *config) RouteEtcd(endpoint, path, schema string) {
 	url := "/" + c.apiVersion + endpoint
 	log.Infof("Add endpoint: %s etcd path: %s schema: %s", url, path, schema)
@@ -235,6 +236,16 @@ func (c *config) RouteEtcd(endpoint, path, schema string) {
 	c.router.HandleFunc(url+"/{name}", c.putOrPatchDoc(path, schema)).Methods("PUT")
 	c.router.HandleFunc(url+"/{name}", c.putOrPatchDoc(path, schema)).Methods("PATCH")
 	c.router.HandleFunc(url+"/{name}", c.deleteDoc(path)).Methods("DELETE")
+}
+
+// RouteStatic add route for file system path.
+func (c *config) RouteStatic(endpoint, path string) {
+	url := "/" + c.apiVersion + endpoint
+	log.Infof("Add endpoint: %s path: %s", url, path)
+
+	static := http.StripPrefix(url, http.FileServer(http.Dir(path)))
+	c.router.PathPrefix(url).Handler(static)
+	http.Handle("/", c.router)
 }
 
 // Run server.
