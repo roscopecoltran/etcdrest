@@ -21,6 +21,7 @@ import (
 )
 
 var session etcd.Session
+var templ *template.Template
 
 // Config interface.
 type Config interface {
@@ -120,16 +121,11 @@ func (c *config) validateDoc(doc []byte, path string, schema string) (int, []err
 }
 
 // putOrPatchDoc put or patch document.
-func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseWriter, r *http.Request) {
+func (c *config) putOrPatchDoc(endpoint, path, schema string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newPath bytes.Buffer
 
-		t, err := template.New("endpoint").Parse(path)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		err = t.Execute(&newPath, mux.Vars(r))
+		err := templ.ExecuteTemplate(&newPath, endpoint, mux.Vars(r))
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -194,16 +190,11 @@ func (c *config) putOrPatchDoc(path string, schema string) func(w http.ResponseW
 }
 
 // getDoc get document.
-func (c *config) getDoc(path string) func(w http.ResponseWriter, r *http.Request) {
+func (c *config) getDoc(endpoint, path string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newPath bytes.Buffer
 
-		t, err := template.New("endpoint").Parse(path)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		err = t.Execute(&newPath, mux.Vars(r))
+		err := templ.ExecuteTemplate(&newPath, endpoint, mux.Vars(r))
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -221,16 +212,11 @@ func (c *config) getDoc(path string) func(w http.ResponseWriter, r *http.Request
 }
 
 // deleteDoc delete document.
-func (c *config) deleteDoc(path string) func(w http.ResponseWriter, r *http.Request) {
+func (c *config) deleteDoc(endpoint, path string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newPath bytes.Buffer
 
-		t, err := template.New("endpoint").Parse(path)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		err = t.Execute(&newPath, mux.Vars(r))
+		err := templ.ExecuteTemplate(&newPath, endpoint, mux.Vars(r))
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -257,11 +243,19 @@ func (c *config) RouteEtcd(collection, collectionPath, resource, resourcePath, s
 	log.Infof("Add collection: %s collection path: %s", collection, collectionPath)
 	log.Infof("Add resource: %s resource path: %s schema: %s", resource, resourcePath, schema)
 
-	c.router.HandleFunc(collection, c.getDoc(collectionPath)).Methods("GET")
-	c.router.HandleFunc(resource, c.getDoc(resourcePath)).Methods("GET")
-	c.router.HandleFunc(resource, c.putOrPatchDoc(resourcePath, schema)).Methods("PUT")
-	c.router.HandleFunc(resource, c.putOrPatchDoc(resourcePath, schema)).Methods("PATCH")
-	c.router.HandleFunc(resource, c.deleteDoc(resourcePath)).Methods("DELETE")
+	if templ == nil {
+		templ = template.Must(template.New(collection).Parse(collectionPath))
+	} else {
+		template.Must(templ.New(collection).Parse(collectionPath))
+	}
+
+	template.Must(templ.New(resource).Parse(resourcePath))
+
+	c.router.HandleFunc(collection, c.getDoc(collection, collectionPath)).Methods("GET")
+	c.router.HandleFunc(resource, c.getDoc(resource, resourcePath)).Methods("GET")
+	c.router.HandleFunc(resource, c.putOrPatchDoc(resource, resourcePath, schema)).Methods("PUT")
+	c.router.HandleFunc(resource, c.putOrPatchDoc(resource, resourcePath, schema)).Methods("PATCH")
+	c.router.HandleFunc(resource, c.deleteDoc(resource, resourcePath)).Methods("DELETE")
 }
 
 // RouteStatic add route for file system path.
