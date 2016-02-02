@@ -10,19 +10,6 @@ cd etcdrest
 make
 ```
 
-# Build Docker image
-
-# Example
-
-Make sure you have Docker configured.
-
-**Start etcd:**
-
-```
-./init-etcd.sh start
-eval "$(./init-etcd.sh env)"
-```
-
 # CAVEATS
 
 - POST is not supported since we're not using unique ID's but rather each operation is idempotent
@@ -31,5 +18,4 @@ eval "$(./init-etcd.sh env)"
 
 - JQ style filtering
 - In-line JS pre/post hooks for business logic
-- Template endpoint either Go Text Template or Pongo2 / alt. handlebars?
-- Static endpoint
+- Indexes
