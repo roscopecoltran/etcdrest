@@ -6,13 +6,14 @@ unset CLICOLOR
 unset GREP_OPTIONS
 
 URL="http://localhost:8080"
-APIURL="${URL}/api/v1"
 
 if [ -n "${DOCKER_HOST:-}" ]; then
   DOCKER_IP_PORT=${DOCKER_HOST#tcp://}
   DOCKER_IP=${DOCKER_IP_PORT%:*}
   URL="http://${DOCKER_IP}:8080"
 fi
+
+APIURL="${URL}/api/v1"
 
 cpt() {
     printf "\n\n########## $1 ##########\n\n"
