@@ -6,13 +6,6 @@ import (
 	"strings"
 )
 
-// envelope struct.
-type Envelope struct {
-	code   int         `json:"code"`
-	data   interface{} `json:"data,omitempty"`
-	errors []string    `json:"errors,omitempty"`
-}
-
 func (c *config) write(w http.ResponseWriter, r *http.Request, data interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -28,10 +21,12 @@ func (c *config) write(w http.ResponseWriter, r *http.Request, data interface{})
 	if envelope == false {
 		c.writeMIME(w, r, data)
 	} else {
-		c.writeMIME(w, r, Envelope{
-			code: http.StatusOK,
-			data: data,
-		})
+		e := map[string]interface{}{
+			"code": http.StatusOK,
+			"data": data,
+		}
+
+		c.writeMIME(w, r, e)
 	}
 }
 
@@ -55,10 +50,12 @@ func (c *config) writeErrors(w http.ResponseWriter, r *http.Request, errors []er
 	if envelope == false {
 		c.writeMIME(w, r, s)
 	} else {
-		c.writeMIME(w, r, Envelope{
-			code:   http.StatusOK,
-			errors: s,
-		})
+		e := map[string]interface{}{
+			"code": http.StatusOK,
+			"data": s,
+		}
+
+		c.writeMIME(w, r, e)
 	}
 }
 
