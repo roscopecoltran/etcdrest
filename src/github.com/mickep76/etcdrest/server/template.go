@@ -29,7 +29,7 @@ func substr(s string, b int, l int) string {
 }
 
 func get(path string) (interface{}, error) {
-	data, _, err := session.Get(path)
+	data, _, err := session.Get(path, false)
 	return data, err
 }
 

@@ -146,7 +146,7 @@ func (c *config) putOrPatchDoc(endpoint, path, schema string) func(w http.Respon
 		// Patch document using JSON patch RFC 6902.
 		var doc []byte
 		if r.Method == "PATCH" {
-			data, code, err := c.session.Get(newPath.String())
+			data, code, err := c.session.Get(newPath.String(), false)
 			if err != nil {
 				c.writeError(w, r, err, code)
 				return
@@ -194,6 +194,11 @@ func (c *config) getDoc(endpoint, path string) func(w http.ResponseWriter, r *ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newPath bytes.Buffer
 
+		table := false
+		if strings.ToLower(r.URL.Query().Get("table")) == "true" {
+			table = true
+		}
+
 		err := templ.ExecuteTemplate(&newPath, endpoint, mux.Vars(r))
 		if err != nil {
 			log.Fatal(err.Error())
@@ -201,7 +206,7 @@ func (c *config) getDoc(endpoint, path string) func(w http.ResponseWriter, r *ht
 
 		log.Infof("etcd path: %s", newPath.String())
 
-		doc, code, err := c.session.Get(newPath.String())
+		doc, code, err := c.session.Get(newPath.String(), table)
 		if err != nil {
 			c.writeError(w, r, err, code)
 			return
@@ -223,7 +228,7 @@ func (c *config) deleteDoc(endpoint, path string) func(w http.ResponseWriter, r 
 
 		log.Infof("etcd path: %s", newPath.String())
 
-		data, code, err := c.session.Get(newPath.String())
+		data, code, err := c.session.Get(newPath.String(), false)
 		if err != nil {
 			c.writeError(w, r, err, code)
 			return

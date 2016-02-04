@@ -31,7 +31,7 @@ type Config interface {
 type Session interface {
 	Put(string, interface{}) (int, error)
 	Delete(string) (int, error)
-	Get(string) (interface{}, int, error)
+	Get(string, bool) (interface{}, int, error)
 }
 
 // config struct.
@@ -147,7 +147,7 @@ func (s *session) Put(p string, d interface{}) (int, error) {
 }
 
 // Get document.
-func (s *session) Get(p string) (interface{}, int, error) {
+func (s *session) Get(p string, table bool) (interface{}, int, error) {
 	res, err := s.keysAPI.Get(context.TODO(), p, &client.GetOptions{Recursive: true})
 	if err != nil {
 		// Document doesn't exist.
@@ -157,6 +157,11 @@ func (s *session) Get(p string) (interface{}, int, error) {
 
 		// Error retrieving document.
 		return nil, http.StatusInternalServerError, err
+	}
+
+	if table {
+		arr := etcdmap.Array(res.Node)
+		return arr, http.StatusOK, nil
 	}
 
 	return etcdmap.Map(res.Node), http.StatusOK, nil
