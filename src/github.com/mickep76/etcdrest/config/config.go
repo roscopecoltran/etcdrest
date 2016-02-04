@@ -50,6 +50,7 @@ type Route struct {
 	Type           string `json:"type,omitempty"`
 	Template       string `json:"template,omitempty"`
 	Path           string `json:"path,omitempty"`
+	DirName        string `json:"dirName,omitempty"`
 	Schema         string `json:"schema,omitempty"`
 }
 

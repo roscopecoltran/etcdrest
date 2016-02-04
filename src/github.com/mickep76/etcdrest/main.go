@@ -94,7 +94,7 @@ func runServer(c *cli.Context, cfg *config.Config) {
 	for _, route := range cfg.Routes {
 		switch route.Type {
 		case "api":
-			sc.RouteEtcd(route.Collection, route.CollectionPath, route.Resource, route.ResourcePath, route.Schema)
+			sc.RouteEtcd(route.Collection, route.CollectionPath, route.Resource, route.ResourcePath, route.Schema, route.DirName)
 		case "template":
 			sc.RouteTemplate(route.Endpoint, route.Template)
 		case "static":

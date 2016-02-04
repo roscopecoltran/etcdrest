@@ -7,6 +7,7 @@
       "collectionPath": "/hosts",
       "resource": "/api/v1/hosts/{host}",
       "resourcePath": "/hosts/{{.host}}",
+      "dirName": "hostname",
       "type": "api",
       "schema": "host.json"
     },
@@ -15,6 +16,7 @@
       "collectionPath": "/hosts/{{.host}}/interfaces",
       "resource": "/api/v1/hosts/{host}/interfaces/{interface}",
       "resourcePath": "/hosts/{{.host}}/interfaces/{{.interface}}",
+      "dirName": "interface",
       "type": "api",
       "schema": "interface.json"
     },
