@@ -42,16 +42,16 @@ type Etcd struct {
 
 // Route struct.
 type Route struct {
-	Endpoint       string `json:"endpoint,omitempty"`
-	Collection     string `json:"collection,omitempty"`
-	CollectionPath string `json:"collectionPath,omitempty"`
-	Resource       string `json:"resource,omitempty"`
-	ResourcePath   string `json:"resourcePath,omitempty"`
-	Type           string `json:"type,omitempty"`
-	Template       string `json:"template,omitempty"`
-	Path           string `json:"path,omitempty"`
-	DirName        string `json:"dirName,omitempty"`
-	Schema         string `json:"schema,omitempty"`
+	Endpoint       string `json:"endpoint,omitempty" yaml:"endpoint,omitempty" toml:"endpoint,omitempty"`
+	Collection     string `json:"collection,omitempty" yaml:"collection,omitempty" toml:"collection,omitempty"`
+	CollectionPath string `json:"collectionPath,omitempty" yaml:"collectionPath,omitempty" toml:"collectionPath,omitempty"`
+	Resource       string `json:"resource,omitempty" yaml:"resource,omitempty" toml:"resource,omitempty"`
+	ResourcePath   string `json:"resourcePath,omitempty" yaml:"resourcePath,omitempty" toml:"resourcePath,omitempty"`
+	Type           string `json:"type,omitempty" yaml:"type,omitempty" toml:"type,omitempty"`
+	Template       string `json:"template,omitempty" yaml:"template,omitempty" toml:"template,omitempty"`
+	Path           string `json:"path,omitempty" yaml:"path,omitempty" toml:"path,omitempty"`
+	DirName        string `json:"dirName,omitempty" yaml:"dirName,omitempty" toml:"dirName,omitempty"`
+	Schema         string `json:"schema,omitempty" yaml:"schema,omitempty" toml:"schema,omitempty"`
 }
 
 func New() *Config {
