@@ -190,12 +190,12 @@ func (c *config) putOrPatchDoc(endpoint, path, schema string) func(w http.Respon
 }
 
 // getDoc get document.
-func (c *config) getDoc(endpoint, path string, dirName string) func(w http.ResponseWriter, r *http.Request) {
+func (c *config) getDoc(endpoint, path string, collection bool, dirName string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newPath bytes.Buffer
 
 		table := false
-		if strings.ToLower(r.URL.Query().Get("table")) == "true" {
+		if collection == true && strings.ToLower(r.URL.Query().Get("table")) == "true" {
 			table = true
 		}
 
@@ -256,8 +256,8 @@ func (c *config) RouteEtcd(collection, collectionPath, resource, resourcePath, s
 
 	template.Must(templ.New(resource).Parse(resourcePath))
 
-	c.router.HandleFunc(collection, c.getDoc(collection, collectionPath, dirName)).Methods("GET")
-	c.router.HandleFunc(resource, c.getDoc(resource, resourcePath, dirName)).Methods("GET")
+	c.router.HandleFunc(collection, c.getDoc(collection, collectionPath, true, dirName)).Methods("GET")
+	c.router.HandleFunc(resource, c.getDoc(resource, resourcePath, false, dirName)).Methods("GET")
 	c.router.HandleFunc(resource, c.putOrPatchDoc(resource, resourcePath, schema)).Methods("PUT")
 	c.router.HandleFunc(resource, c.putOrPatchDoc(resource, resourcePath, schema)).Methods("PATCH")
 	c.router.HandleFunc(resource, c.deleteDoc(resource, resourcePath)).Methods("DELETE")
