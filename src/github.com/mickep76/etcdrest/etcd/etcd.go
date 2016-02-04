@@ -32,6 +32,7 @@ type Session interface {
 	Put(string, interface{}) (int, error)
 	Delete(string) (int, error)
 	Get(string, bool, string) (interface{}, int, error)
+	GetKeys(...string) ([]string, int, error)
 }
 
 // config struct.
@@ -165,6 +166,29 @@ func (s *session) Get(p string, table bool, dirName string) (interface{}, int, e
 	}
 
 	return etcdmap.Map(res.Node), http.StatusOK, nil
+}
+
+// GetKeys substitute keys in order.
+func (s *session) GetKeys(paths ...string) ([]string, int, error) {
+	arr := []string{}
+	for _, p := range paths {
+
+		res, err := s.keysAPI.Get(context.TODO(), p, &client.GetOptions{Recursive: false})
+		if err != nil {
+			// Document doesn't exist.
+			if cerr, ok := err.(client.Error); ok && cerr.Code == 100 {
+				return []string{}, http.StatusNotFound, err
+			}
+
+			// Error retrieving document.
+			return []string{}, http.StatusInternalServerError, err
+		}
+
+		if res.Node.Value != "" {
+			arr = append(arr, res.Node.Value)
+		}
+	}
+	return arr, http.StatusOK, nil
 }
 
 // Delete document.

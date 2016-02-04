@@ -28,15 +28,26 @@ func substr(s string, b int, l int) string {
 	return s[b:l]
 }
 
+func lastval(l []string) string {
+	return l[len(l)-1]
+}
+
 func get(path string) (interface{}, error) {
 	data, _, err := session.Get(path, false, "")
 	return data, err
 }
 
+func getKeys(paths ...string) ([]string, error) {
+	arr, _, err := session.GetKeys(paths...)
+	return arr, err
+}
+
 var funcs = template.FuncMap{
-	"center": center,
-	"substr": substr,
-	"get":    get,
+	"center":  center,
+	"substr":  substr,
+	"get":     get,
+	"getkeys": getKeys,
+	"lastval": lastval,
 }
 
 var templates *template.Template
