@@ -29,25 +29,51 @@ func substr(s string, b int, l int) string {
 }
 
 func lastval(l []string) string {
-	return l[len(l)-1]
+	for i := len(l) - 1; i >= 0; i-- {
+		if l[i] != "" {
+			return l[i]
+		}
+	}
+
+	return ""
+}
+
+func lastvaln(l ...string) string {
+	return lastval(l)
 }
 
 func get(path string) (interface{}, error) {
-	data, _, err := session.Get(path, false, "")
+	data, code, err := session.Get(path, false, "")
+
+	if code == http.StatusNotFound {
+		return nil, nil
+	}
+
 	return data, err
 }
 
 func getKeys(paths ...string) ([]string, error) {
-	arr, _, err := session.GetKeys(paths...)
+	arr, code, err := session.GetKeys(paths...)
+
+	if code == http.StatusNotFound {
+		return nil, nil
+	}
+
 	return arr, err
 }
 
+func replace(oldStr string, newStr string, str string) string {
+	return strings.Replace(str, oldStr, newStr, -1)
+}
+
 var funcs = template.FuncMap{
-	"center":  center,
-	"substr":  substr,
-	"get":     get,
-	"getkeys": getKeys,
-	"lastval": lastval,
+	"center":   center,
+	"substr":   substr,
+	"get":      get,
+	"getkeys":  getKeys,
+	"lastval":  lastval,
+	"lastvaln": lastvaln,
+	"replace":  replace,
 }
 
 var templates *template.Template

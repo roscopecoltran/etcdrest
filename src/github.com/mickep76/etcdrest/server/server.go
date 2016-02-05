@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/evanphx/json-patch"
@@ -265,12 +266,16 @@ func (c *config) RouteEtcd(collection, collectionPath, resource, resourcePath, s
 
 // RouteStatic add route for file system path.
 func (c *config) RouteStatic(endpoint, path string) {
-	url := endpoint
-	log.Infof("Add endpoint: %s path: %s", url, path)
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
-	static := http.StripPrefix(url, http.FileServer(http.Dir(path)))
-	c.router.PathPrefix(url).Handler(static)
-	http.Handle("/", c.router)
+	log.Infof("Add endpoint: %s abs. path: %s", endpoint, abs)
+
+	handler := http.StripPrefix(endpoint, http.FileServer(http.Dir(abs)))
+	c.router.PathPrefix(endpoint).Handler(handler)
+	http.Handle(endpoint, handler)
 }
 
 // Run server.
