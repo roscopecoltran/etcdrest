@@ -23,6 +23,7 @@ type Config struct {
 	TemplDir  string  `json:"templDir" yaml:"templDir" toml:"templDir"`
 	SchemaURI string  `json:"schemaURI" yaml:"schemaURI" toml:"schemaURI"`
 	Bind      string  `json:"bind,omitempty" yaml:"bind,omitempty" toml:"bind,omitempty"`
+	ServerURI string  `json:"serverURI" yaml:"serverURI" toml:"serverURI"`
 	Envelope  bool    `json:"envelope" yaml:"evelope" toml:"envelope"`
 	Indent    bool    `json:"indent" yaml:"indent" toml:"indent"`
 	Etcd      Etcd    `json:"etcd,omitempty" yaml:"etcd,omitempty" toml:"etcd,omitempty"`
@@ -154,6 +155,17 @@ func (cfg *Config) Load(c *cli.Context) {
 
 	if c.GlobalString("bind") != "" {
 		cfg.Bind = c.GlobalString("bind")
+	}
+
+	if c.GlobalString("server-uri") != "" {
+		cfg.ServerURI = c.GlobalString("server-uri")
+	} else {
+		hostname, err := os.Hostname()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		port := strings.Split(cfg.Bind, ":")[1]
+		cfg.ServerURI = "http://" + hostname + ":" + port
 	}
 
 	if c.GlobalBool("envelope") {

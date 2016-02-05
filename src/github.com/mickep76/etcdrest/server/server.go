@@ -29,6 +29,7 @@ type Config interface {
 	TemplDir(string) Config
 	SchemaURI(string) Config
 	Bind(string) Config
+	ServerURI(string) Config
 	Envelope(bool) Config
 	Indent(bool) Config
 	RouteEtcd(string, string, string, string, string, string)
@@ -42,6 +43,7 @@ type config struct {
 	templDir  string
 	schemaURI string
 	bind      string
+	serverURI string
 	envelope  bool
 	indent    bool
 	session   etcd.Session
@@ -73,6 +75,11 @@ func (c *config) SchemaURI(schemaURI string) Config {
 
 func (c *config) Bind(bind string) Config {
 	c.bind = bind
+	return c
+}
+
+func (c *config) ServerURI(serverURI string) Config {
+	c.serverURI = serverURI
 	return c
 }
 
@@ -283,6 +290,7 @@ func (c *config) Run() error {
 	session = c.session
 
 	log.Infof("Bind to: %s", c.bind)
+	log.Infof("Using server URI: %s", c.serverURI)
 	logr := handlers.LoggingHandler(os.Stderr, c.router)
 	return http.ListenAndServe(c.bind, logr)
 }

@@ -92,8 +92,9 @@ func (c *config) RouteTemplate(endpoint, templ string) {
 func (c *config) getTemplate(templ string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		input := map[string]interface{}{
-			"vars":   mux.Vars(r),
-			"params": r.URL.Query(),
+			"vars":       mux.Vars(r),
+			"params":     r.URL.Query(),
+			"server_uri": c.serverURI,
 		}
 
 		// Write template.

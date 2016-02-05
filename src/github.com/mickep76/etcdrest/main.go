@@ -23,7 +23,8 @@ func main() {
 		cli.BoolFlag{Name: "debug, d", EnvVar: "ETCDREST_DEBUG", Usage: "Debug"},
 		cli.StringFlag{Name: "config, c", EnvVar: "ETCDREST_CONFIG", Usage: "Configuration file (/etc/etcdrest.json|yaml|toml or $HOME/.etcdrest.json|yaml|toml)"},
 		cli.StringFlag{Name: "templ-dir", EnvVar: "ETCDREST_TEMPL_DIR", Usage: "Template directory"},
-		cli.StringFlag{Name: "schema-uri", EnvVar: "ETCDREST_SCHEMA_URI", Usage: "Schema directory"},
+		cli.StringFlag{Name: "schema-uri", EnvVar: "ETCDREST_SCHEMA_URI", Usage: "Schema URI"},
+		cli.StringFlag{Name: "server-uri", EnvVar: "ETCDREST_SERVER_URI", Usage: "Server URI"},
 		cli.StringFlag{Name: "peers, p", EnvVar: "ETCDREST_PEERS", Usage: "Comma-delimited list of hosts in the cluster"},
 		cli.StringFlag{Name: "cert", EnvVar: "ETCDREST_CERT", Usage: "Identify HTTPS client using this SSL certificate file"},
 		cli.StringFlag{Name: "key", EnvVar: "ETCDREST_KEY", Usage: "Identify HTTPS client using this SSL key file"},
@@ -88,6 +89,7 @@ func runServer(c *cli.Context, cfg *config.Config) {
 	sc.TemplDir(cfg.TemplDir)
 	sc.SchemaURI(cfg.SchemaURI)
 	sc.Bind(cfg.Bind)
+	sc.ServerURI(cfg.ServerURI)
 	sc.Envelope(cfg.Envelope)
 	sc.Indent(cfg.Indent)
 
