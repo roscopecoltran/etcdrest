@@ -64,6 +64,12 @@ func New() *Config {
 		Indent:    true,
 	}
 
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	cfg.ServerURI = "http://" + hostname + ":8080"
+
 	cfg.Etcd = Etcd{
 		Peers:      "http://127.0.0.1:4001,http://127.0.0.1:2379",
 		Timeout:    time.Second,
@@ -159,13 +165,6 @@ func (cfg *Config) Load(c *cli.Context) {
 
 	if c.GlobalString("server-uri") != "" {
 		cfg.ServerURI = c.GlobalString("server-uri")
-	} else {
-		hostname, err := os.Hostname()
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		port := strings.Split(cfg.Bind, ":")[1]
-		cfg.ServerURI = "http://" + hostname + ":" + port
 	}
 
 	if c.GlobalBool("envelope") {

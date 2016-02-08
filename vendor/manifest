@@ -10,48 +10,48 @@
 		{
 			"importpath": "github.com/codegangsta/cli",
 			"repository": "https://github.com/codegangsta/cli",
-			"revision": "f9cc3001e04f9783cb4ad08ca6791aa07134787c",
+			"revision": "d5f087da9da695cf28797fba388430f5fce93139",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/github.com/ugorji/go/codec",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
+			"revision": "2be7f7c2fb11d8df6090794d2b2f9f2572770efc",
 			"branch": "master",
 			"path": "/Godeps/_workspace/src/github.com/ugorji/go/codec"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
+			"revision": "2be7f7c2fb11d8df6090794d2b2f9f2572770efc",
 			"branch": "master",
 			"path": "/Godeps/_workspace/src/golang.org/x/net/context"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/client",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
+			"revision": "2be7f7c2fb11d8df6090794d2b2f9f2572770efc",
 			"branch": "master",
 			"path": "/client"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/pathutil",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
+			"revision": "2be7f7c2fb11d8df6090794d2b2f9f2572770efc",
 			"branch": "master",
 			"path": "/pkg/pathutil"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/transport",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
+			"revision": "2be7f7c2fb11d8df6090794d2b2f9f2572770efc",
 			"branch": "master",
 			"path": "/pkg/transport"
 		},
 		{
 			"importpath": "github.com/coreos/etcd/pkg/types",
 			"repository": "https://github.com/coreos/etcd",
-			"revision": "145d5b85a75facd37c97a3349b83a94eecb03a7c",
+			"revision": "2be7f7c2fb11d8df6090794d2b2f9f2572770efc",
 			"branch": "master",
 			"path": "/pkg/types"
 		},
@@ -70,7 +70,7 @@
 		{
 			"importpath": "github.com/gorilla/handlers",
 			"repository": "https://github.com/gorilla/handlers",
-			"revision": "44328eee346b9614b3fe8ca84e72fe23736afbfb",
+			"revision": "b3aff83722cb2ae031a70cae984650e3a16cd20e",
 			"branch": "master"
 		},
 		{
@@ -112,7 +112,7 @@
 		{
 			"importpath": "golang.org/x/net/context",
 			"repository": "https://go.googlesource.com/net",
-			"revision": "04b9de9b512f58addf28c9853d50ebef61c3953e",
+			"revision": "7f88271ea9913b72aca44fa7fc8af919eacc17ce",
 			"branch": "master",
 			"path": "/context"
 		},
