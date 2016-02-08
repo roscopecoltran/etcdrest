@@ -3,14 +3,51 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/gorilla/mux"
+	"github.com/robertkrimen/otto"
 
 	"github.com/mickep76/etcdrest/log"
 )
+
+func jsSet(key string, val interface{}) error {
+	return vm.Set(key, val)
+}
+
+func jsRun(code string) (otto.Value, error) {
+	return vm.Run(code)
+}
+
+func getSubnet(ip, netmask string) (string, error) {
+	// Check ip
+	if net.ParseIP(ip) == nil {
+		return "", fmt.Errorf("invalid IP address %s", ip)
+	}
+
+	// Check netmask
+	maskIP := net.ParseIP(netmask).To4()
+	if maskIP == nil {
+		return "", fmt.Errorf("invalid Netmask %s", netmask)
+	}
+
+	// Get prefix
+	mask := net.IPMask(maskIP)
+	prefix, _ := mask.Size()
+
+	// Get network
+	sPrefix := strconv.Itoa(prefix)
+	_, network, err := net.ParseCIDR(ip + "/" + sPrefix)
+	if err != nil {
+		return "", err
+	}
+
+	return network.IP.String() + "/" + sPrefix, nil
+}
 
 func center(size int, deco string, str string) string {
 	if size < len(str) {
@@ -67,21 +104,26 @@ func replace(oldStr string, newStr string, str string) string {
 }
 
 var funcs = template.FuncMap{
-	"center":   center,
-	"substr":   substr,
-	"get":      get,
-	"getkeys":  getKeys,
-	"lastval":  lastval,
-	"lastvaln": lastvaln,
-	"replace":  replace,
+	"center":    center,
+	"substr":    substr,
+	"get":       get,
+	"getkeys":   getKeys,
+	"lastval":   lastval,
+	"lastvaln":  lastvaln,
+	"replace":   replace,
+	"setjs":     jsSet,
+	"runjs":     jsRun,
+	"getsubnet": getSubnet,
 }
 
 var templates *template.Template
+var vm *otto.Otto
 
 // RouteTempl add route for Go Text Template.
 func (c *config) RouteTemplate(endpoint, templ string) {
 	if templates == nil {
 		templates = template.Must(template.New("main").Funcs(funcs).ParseGlob(c.templDir + "/*.tmpl"))
+		vm = otto.New()
 	}
 
 	url := endpoint

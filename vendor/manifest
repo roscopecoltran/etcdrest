@@ -8,6 +8,13 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/chzyer/readline/runes",
+			"repository": "https://github.com/chzyer/readline",
+			"revision": "1aa557f19e1289056e080e3f3c07ecb7ea45b665",
+			"branch": "master",
+			"path": "/runes"
+		},
+		{
 			"importpath": "github.com/codegangsta/cli",
 			"repository": "https://github.com/codegangsta/cli",
 			"revision": "d5f087da9da695cf28797fba388430f5fce93139",
@@ -92,6 +99,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/robertkrimen/otto",
+			"repository": "https://github.com/robertkrimen/otto",
+			"revision": "c21072f61b64b51ea58138ccacf0a85d54b9f07c",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/xeipuuv/gojsonpointer",
 			"repository": "https://github.com/xeipuuv/gojsonpointer",
 			"revision": "e0fe6f68307607d540ed8eac07a342c33fa1b54a",
@@ -110,11 +123,24 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "golang.org/x/crypto/ssh/terminal",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "1f22c0103821b9390939b6776727195525381532",
+			"branch": "master",
+			"path": "/ssh/terminal"
+		},
+		{
 			"importpath": "golang.org/x/net/context",
 			"repository": "https://go.googlesource.com/net",
 			"revision": "7f88271ea9913b72aca44fa7fc8af919eacc17ce",
 			"branch": "master",
 			"path": "/context"
+		},
+		{
+			"importpath": "gopkg.in/readline.v1",
+			"repository": "https://gopkg.in/readline.v1",
+			"revision": "09b448ca0ba1566ed99bf53ab0f0547ee748cdc9",
+			"branch": "master"
 		},
 		{
 			"importpath": "gopkg.in/yaml.v2",
