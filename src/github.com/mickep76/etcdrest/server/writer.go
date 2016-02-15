@@ -51,7 +51,7 @@ func (c *config) writeErrors(w http.ResponseWriter, r *http.Request, errors []er
 		c.writeMIME(w, r, s)
 	} else {
 		e := map[string]interface{}{
-			"code": http.StatusOK,
+			"code": code,
 			"data": s,
 		}
 
